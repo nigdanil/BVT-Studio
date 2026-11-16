@@ -1,0 +1,85 @@
+"""Blender sidebar panel; no geometry or render business logic."""
+import bpy
+from .common import scene_annotations
+from .annotation import PREVIEW_PROP
+from .glass import scene_glass
+
+
+class BVTSTUDIO_PT_main(bpy.types.Panel):
+    bl_label = 'BVT Studio | 2.5D'
+    bl_idname = 'BVTSTUDIO_PT_main'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'BVT Studio'
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        settings = scene.bvt_studio
+        selected = context.active_object
+
+        box = layout.box()
+        box.label(text='1. Photo / Scene', icon='IMAGE_DATA')
+        box.operator('bvt_studio.load_photo', text='New Scene from Photo', icon='FILE_IMAGE')
+        box.operator('bvt_studio.use_source', text='Use Selected Image Plane', icon='EYEDROPPER')
+        box.prop(settings, 'source_object', text='Source')
+        box.prop(settings, 'camera_profile', text='Frame')
+        box.operator('bvt_studio.fit_camera', text='Frame Camera to Photo', icon='CAMERA_DATA')
+        box.label(text='Photo stays flat; camera crops/frames it.', icon='INFO')
+
+        box = layout.box()
+        box.label(text=f'2. Glass / Artifacts ({len(scene_glass(scene))})', icon='MOD_FLUIDSIM')
+        box.operator('bvt_studio.setup_glass', text='Setup Selected Glass Plane', icon='MATERIAL')
+        box.operator('bvt_studio.organize_glass', text='Register / Setup Glass All', icon='OUTLINER_COLLECTION')
+        box.operator('bvt_studio.renumber_glass', text='Renumber Glass 001...N', icon='SORTALPHA')
+        if selected and selected.get('bvt_role') == 'glass_overlay':
+            for prop, title in (
+                ('bvt_glass_reflection', 'Reflections'),
+                ('bvt_glass_tint', 'Tint'),
+                ('bvt_glass_haze', 'Haze'),
+                ('bvt_glass_frost', 'Frost'),
+            ):
+                if prop in selected:
+                    box.prop(selected, f'["{prop}"]', text=title, slider=True)
+        else:
+            box.label(text='Create/select a Plane over glass.', icon='INFO')
+        box.label(text='Stored in BVT_Glass / Glass_p_001...N', icon='OUTLINER_COLLECTION')
+
+        box = layout.box()
+        count = len(scene_annotations(scene))
+        box.label(text=f'3. Annotation Planes ({count})', icon='OUTLINER_OB_MESH')
+        box.operator('bvt_studio.add_annotation', text='Add Annotation', icon='ADD')
+        box.operator('bvt_studio.register_annotations', text='Register / Color All', icon='SHADING_WIRE')
+        box.operator('bvt_studio.renumber', text='Renumber 001...N', icon='SORTALPHA')
+        show = bool(scene.get(PREVIEW_PROP, False))
+        box.operator('bvt_studio.toggle_preview',
+                     text='Render Outlines: ON' if show else 'Render Outlines: OFF',
+                     icon='HIDE_OFF' if show else 'HIDE_ON')
+        box.operator('bvt_studio.validate', text='Validate YOLO Boxes', icon='CHECKMARK')
+        if selected and (selected.get('bvt_role') == 'annotation' or selected.name.startswith('plane_p_')):
+            sub = box.box()
+            sub.label(text='Selected annotation:')
+            for key, label in (
+                ('bvt_class_id', 'Class ID'),
+                ('bvt_class_name', 'Class name'),
+                ('bvt_enabled', 'Enabled'),
+            ):
+                if key in selected:
+                    sub.prop(selected, f'["{key}"]', text=label)
+            sub.label(text='Scale/move the Plane over a product.')
+
+        box = layout.box()
+        box.label(text='4. YOLO Export', icon='EXPORT')
+        box.prop(settings, 'export_dir', text='Folder')
+        box.operator('bvt_studio.export_yolo', text='Export Clean Image + YOLO', icon='FILE_TICK')
+        box.label(text='One sample per click; val split is manual.', icon='INFO')
+
+CLASSES = (BVTSTUDIO_PT_main,)
+
+def register():
+    for cls in CLASSES:
+        bpy.utils.register_class(cls)
+
+def unregister():
+    for cls in reversed(CLASSES):
+        bpy.utils.unregister_class(cls)

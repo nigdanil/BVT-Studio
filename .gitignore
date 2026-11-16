@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.blend1
+*.blend2
+.venv/
+.vscode/
+.idea/
+dist/
+.build/
+bvt_studio_dataset/
+*.log
+.DS_Store
