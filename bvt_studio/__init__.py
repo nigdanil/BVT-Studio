@@ -2,7 +2,7 @@
 bl_info = {
     "name": "BVT Studio — 2.5D Dataset Builder",
     "author": "BVT Studio contributors",
-    "version": (0, 2, 0),
+    "version": (0, 2, 1),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar (N) > BVT Studio",
     "description": "Photo planes, named glass collections, YOLO annotations and export",

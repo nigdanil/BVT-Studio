@@ -1,3 +1,13 @@
+## 0.2.1 — Installed-version clarity and safer photo/glass workflow
+
+- Display the actual loaded add-on version in the sidebar (helps identify stale installs).
+- Keep a configured source photo when a non-image Plane is active; avoid the
+  misleading `Select a mesh with an Image Texture material` error.
+- Add `Setup Selected Planes (Batch)` to register multiple untextured glass
+  meshes and place them in `BVT_Glass` as `Glass_p_001...N`.
+- Preserve original camera, transforms, material protection and YOLO objects.
+- Add regression tests for photo source selection and UI registration.
+
 # Changelog
 
 ## 0.2.0 — 2026-11-17

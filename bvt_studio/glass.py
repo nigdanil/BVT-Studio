@@ -313,6 +313,36 @@ class BVTSTUDIO_OT_setup_glass(bpy.types.Operator):
             return {'CANCELLED'}
 
 
+class BVTSTUDIO_OT_setup_selected_glass_batch(bpy.types.Operator):
+    bl_idname = 'bvt_studio.setup_selected_glass_batch'
+    bl_label = 'Setup Selected Glass Planes (Batch)'
+    bl_description = 'Turn all selected untextured mesh planes into Glass_p_001...N'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Exclude other types; do not treat the photo or YOLO planes as glass.
+        selected = [obj for obj in context.selected_objects if obj.type == 'MESH']
+        if not selected:
+            self.report({'ERROR'}, 'Select one or more empty glass mesh Planes')
+            return {'CANCELLED'}
+        # Validate ALL selected objects before changing any of them.
+        try:
+            for obj in selected:
+                validate_glass_target(obj)
+            for obj in selected:
+                configure_glass(obj)
+            all_glass = scene_glass(context.scene)
+            organize_glass(context.scene, all_glass)
+            renumber_glass(context.scene, all_glass)
+            context.view_layer.update()
+            self.report({'INFO'},
+                        f'Configured {len(selected)} selected glass Plane(s) in {GLASS_COLLECTION}')
+            return {'FINISHED'}
+        except Exception as exc:
+            self.report({'ERROR'}, str(exc))
+            return {'CANCELLED'}
+
+
 class BVTSTUDIO_OT_organize_glass(bpy.types.Operator):
     bl_idname = 'bvt_studio.organize_glass'
     bl_label = 'Register / Setup Glass Planes'
@@ -372,8 +402,8 @@ class BVTSTUDIO_OT_renumber_glass(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-CLASSES = (BVTSTUDIO_OT_setup_glass, BVTSTUDIO_OT_organize_glass,
-           BVTSTUDIO_OT_renumber_glass)
+CLASSES = (BVTSTUDIO_OT_setup_glass, BVTSTUDIO_OT_setup_selected_glass_batch,
+           BVTSTUDIO_OT_organize_glass, BVTSTUDIO_OT_renumber_glass)
 
 
 def register():

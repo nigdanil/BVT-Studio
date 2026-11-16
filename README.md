@@ -119,3 +119,25 @@ Source code is distributed under **GPL-3.0-or-later**, consistent with the BVT p
 This is a Python-compiled, ZIP-verified **prototype**. Runtime integration inside Blender 5.2.3 is not tested in this build environment. Please test against a copy of your `.blend` before publishing a formal tested release.
 
 For one-command GitHub creation and beta publication (Git Bash, after `gh auth login` and a Blender smoke test), run `bash scripts/publish_github.sh`. This script is **not executed as part of ZIP installation**.
+
+
+### Upgrading from 0.2.0 to 0.2.1
+
+Blender loads the add-on code from its **installed extensions/addons folder**, not
+from the GitHub repository. A `git pull` alone will **not** update Blender.
+
+1. In Blender > Preferences > Get Extensions / Add-ons, remove or disable
+   the old `BVT Studio` installation. Restart Blender.
+2. Build the installable ZIP using `python scripts/build_addon.py` and
+   install it from disk. Restart Blender again.
+3. The sidebar must display **BVT Studio v0.2.1**. If not, an older add-on
+   copy remains installed. Check the add-on path via Blender's Python console:
+   `import bvt_studio; print(bvt_studio.__file__, bvt_studio.bl_info['version'])`.
+
+- **Use Selected / Current Photo** accepts the selected textured mesh, but keeps
+  the existing `Source` when an untextured `Plane` or glass Plane is active.
+- **Setup Selected Planes (Batch)** accepts multiple selected glass Planes even
+  with default names `Plane`, `Plane.001` etc., and organizes them in `BVT_Glass`.
+  It refuses to overwrite image-textured and annotation meshes.
+- If Blender shows `//bvt_studio_dataset` in red on an unsaved project, save the
+  `.blend` or select an absolute export path before exporting.
