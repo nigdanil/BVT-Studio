@@ -96,6 +96,29 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
                      text='Render Outlines: ON' if show else 'Render Outlines: OFF',
                      icon='HIDE_OFF' if show else 'HIDE_ON')
         box.operator('bvt_studio.validate', text='Validate YOLO Boxes', icon='CHECKMARK')
+        # List is refreshed by BVT add/register/renumber and manually after
+        # external Outliner deletions/renames. It never duplicates scene objects.
+        manager = box.box()
+        enabled_count = sum(bool(obj.get('bvt_enabled', True))
+                            for obj in scene_annotations(scene))
+        manager.label(text=f'Annotation Manager: {enabled_count}/{count} enabled',
+                      icon='OUTLINER_COLLECTION')
+        manager.operator('bvt_studio.refresh_annotation_list',
+                         text='Refresh List', icon='FILE_REFRESH')
+        manager.template_list('BVTSTUDIO_UL_annotations', '', settings,
+                              'annotation_items', settings, 'annotation_index', rows=6)
+        manager.operator('bvt_studio.select_all_annotations',
+                         text='Select All Annotations', icon='RESTRICT_SELECT_OFF')
+        manager.label(text='Batch edit selected annotation objects:')
+        manager.prop(settings, 'batch_class_id')
+        manager.prop(settings, 'batch_class_name')
+        manager.operator('bvt_studio.batch_annotation_class',
+                         text='Apply Class to Selected', icon='CHECKMARK')
+        manager.prop(settings, 'batch_enabled')
+        manager.operator('bvt_studio.batch_annotation_enabled',
+                         text='Apply Enabled to Selected', icon='CHECKMARK')
+        manager.label(text='Selection is limited to the active scene.', icon='INFO')
+
         if selected and (selected.get('bvt_role') == 'annotation' or selected.name.startswith('plane_p_')):
             sub = box.box()
             sub.label(text='Selected annotation:')

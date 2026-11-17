@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0-alpha.3 — Annotation Manager
+
+- Add a persistent annotation list with Blender UIList and click-to-select behavior.
+- Refresh list after Add/Register/Renumber and on demand after Outliner deletions.
+- Add Select All Annotations and batch class ID/name editing for selected boxes.
+- Add batch Enabled toggle for including/excluding selected boxes in YOLO.
+- Prevent batch class assignments that conflict with names of an existing class ID.
+- Add unit tests and a Blender 5.2+ headless annotation manager smoke test.
+
+
 ## 0.3.0-alpha.2 — 2026-11-17
 
 - Add Photo-relative layer depth constraints in the source image coordinate system.

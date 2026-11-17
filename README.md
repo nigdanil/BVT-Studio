@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.2.2
+# BVT Studio — 2.5D Dataset Builder v0.3.0-alpha.3
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -7,7 +7,7 @@ No external dependencies beyond Blender's included Python API.
 
 1. Back up your `.blend` project.
 2. Blender → **Edit → Preferences → Get Extensions** → drop-down at the top right → **Install from Disk**.
-3. Choose **`BVT_Studio_Blender_Addon_v0.2.zip`**. This is a legacy add-on ZIP, with `bvt_studio/__init__.py` at the archive root.
+3. Choose the ZIP produced by **`python scripts/build_addon.py`**. This is a legacy add-on ZIP, with `bvt_studio/__init__.py` at the archive root.
 4. If necessary, enable **BVT Studio — 2.5D Dataset Builder** in preferences (add-ons / installed extensions).
 5. In the **3D Viewport**, press **N** and open the **BVT Studio** tab.
 
@@ -32,6 +32,24 @@ If the Blender version displays the extension-warning prompt, allow installation
 - Validate rectangles in camera coordinates (outside frame, zero size, class ID gaps, near-duplicates), single-image YOLO `class cx cy w h` export.
 - Clean PNG render, TXT label file, `data.yaml`, per-sample JSON manifest (with annotations, camera profile, glass parameters).
 - Existing project scene preserved when importing a new photo.
+
+## Annotation Manager (v0.3.0-alpha.3)
+
+- `Annotation Planes` shows an RNA UIList of the scene's actual `plane_p_*` / tagged annotation objects. Click a row to select that rectangle in the viewport when annotations are editable.
+- `Add Annotation`, `Register / Color All` and `Renumber` refresh the list. After deleting or renaming an object directly in Outliner, press **Refresh List**.
+- Press **Select All Annotations** to select every currently editable BVT annotation in this scene, leaving unrelated objects untouched by batch class/enable actions.
+- Fill **Class ID** and **Class Name**, then **Apply Class to Selected**. The action is atomic and rejects conflicting names for a class ID on unselected annotations.
+- **Enabled for YOLO** + **Apply Enabled to Selected** controls `bvt_enabled` on selected rectangles. Disabled boxes are excluded by the existing YOLO exporter.
+- Edits honor `Annotations Edit Enable` when scene protection is active; list items and classes persist in `.blend` with regular Blender scene data.
+
+Run CPython unit tests with `python -m unittest discover -s tests -v`. Then run this actual Blender smoke test:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python scripts/blender_annotation_manager_smoke.py
+```
+
+This slice does **not** yet implement automated completeness checks or a visual YOLO quality-gate report; those are next in the v0.3 roadmap.
 
 ## Scene collections and naming
 
@@ -61,7 +79,7 @@ python scripts/build_addon.py
 python -m unittest discover -s tests -v
 ```
 
-The generated **legacy Blender add-on archive** is `dist/BVT_Studio_Blender_Addon_v0.2.zip`. It has the `bvt_studio/` Python package at ZIP root, which is the same structure that worked in Blender 5.2.3 for v0.1. This is not a Blender Extensions platform manifest package.
+The generated **legacy Blender add-on archive** is `dist/BVT_Studio_Blender_Addon_v0.3.0-alpha.3.zip`. It has the `bvt_studio/` Python package at ZIP root, which is the same structure that worked in Blender 5.2.3 for v0.1. This is not a Blender Extensions platform manifest package.
 
 See [docs/PUBLISHING.md](docs/PUBLISHING.md) for GitHub initialization and release upload.
 

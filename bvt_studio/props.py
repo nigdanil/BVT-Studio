@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import (
     PointerProperty, StringProperty, FloatProperty, EnumProperty, BoolProperty,
+    CollectionProperty, IntProperty,
 )
 
 
@@ -15,7 +16,23 @@ def on_depth_change(self, context):
     on_depth_settings_changed(self, context)
 
 
+def on_annotation_selection_change(self, context):
+    from .annotation_manager import on_annotation_index_changed
+    on_annotation_index_changed(self, context)
+
+
+class BVTStudioAnnotationItem(bpy.types.PropertyGroup):
+    obj: PointerProperty(name='Annotation', type=bpy.types.Object)
+
+
 class BVTStudioSettings(bpy.types.PropertyGroup):
+    annotation_items: CollectionProperty(type=BVTStudioAnnotationItem)
+    annotation_index: IntProperty(name='Annotation row', default=-1,
+                                  update=on_annotation_selection_change)
+    batch_class_id: IntProperty(name='Class ID', default=0, min=0)
+    batch_class_name: StringProperty(name='Class Name', default='ice_cream')
+    batch_enabled: BoolProperty(name='Enabled for YOLO', default=True)
+
     scene_locks_enabled: BoolProperty(
         name='Scene protection active', default=False, update=on_lock_change,
         description='Apply BVT selection and transform locks to this scene',
@@ -76,7 +93,7 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name="Output folder", subtype='DIR_PATH', default="//bvt_studio_dataset",
     )
 
-CLASSES = (BVTStudioSettings,)
+CLASSES = (BVTStudioAnnotationItem, BVTStudioSettings)
 
 
 def register():

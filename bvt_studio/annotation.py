@@ -219,6 +219,8 @@ class BVTSTUDIO_OT_add_annotation(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True)
         context.view_layer.objects.active = obj
+        from .annotation_manager import sync_annotation_list
+        sync_annotation_list(context.scene, preferred=obj)
         self.report({'INFO'}, f'Created {obj.name}; position and scale over an SKU')
         return {'FINISHED'}
 
@@ -238,6 +240,8 @@ class BVTSTUDIO_OT_register_annotations(bpy.types.Operator):
             configure_outline(obj, idx, bool(context.scene.get(PREVIEW_PROP, False)))
         from .scene_lock import apply_scene_locks
         apply_scene_locks(context.scene)
+        from .annotation_manager import sync_annotation_list
+        sync_annotation_list(context.scene)
         self.report({'INFO'}, f'Configured {len(objs)} annotations')
         return {'FINISHED'}
 
@@ -257,6 +261,8 @@ class BVTSTUDIO_OT_renumber(bpy.types.Operator):
             count = renumber(context.scene, objects)
             for i, obj in enumerate(objects):
                 configure_outline(obj, i, bool(context.scene.get(PREVIEW_PROP, False)))
+            from .annotation_manager import sync_annotation_list
+            sync_annotation_list(context.scene)
             self.report({'INFO'}, f'Renumbered {count} annotations')
             return {'FINISHED'}
         except Exception as exc:
