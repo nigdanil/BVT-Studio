@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-alpha.5 — YOLO Preview / Portable Export
+
+- Export a browser-viewable SVG bounding-box preview aligned with the actual YOLO TXT and clean PNG.
+- Use dataset-relative `train`/`val` references in `data.yaml`, removing machine-specific absolute paths.
+- Keep validation split empty for single-photo export; warn in documentation before model training.
+- Add Open Last YOLO Preview in sidebar; preserve clean training images.
+- Add Python tests and a Blender render/export smoke test.
+
+
 ## 0.3.0-alpha.4 — YOLO Quality Gate
 
 - Show a structured validation report in the BVT Studio sidebar (blocking errors and review warnings).

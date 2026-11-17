@@ -4,6 +4,7 @@ import json
 import re
 import uuid
 from pathlib import Path
+from .export_preview import label_text, portable_data_yaml, svg_from_labels
 from bpy_extras.object_utils import world_to_camera_view
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
@@ -309,7 +310,7 @@ class BVTSTUDIO_OT_validate(bpy.types.Operator):
 class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
     bl_idname = 'bvt_studio.export_yolo'
     bl_label = 'Export Clean Image + YOLO'
-    bl_description = 'Render an image without annotation overlays and export YOLO bbox labels'
+    bl_description = 'Render clean PNG, export YOLO TXT, portable YAML and SVG box preview'
 
     def execute(self, context):
         scene = context.scene
@@ -330,14 +331,20 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
             train_labels = root / 'labels' / 'train'
             val_images = root / 'images' / 'val'
             val_labels = root / 'labels' / 'val'
-            for folder in (train_images, train_labels, val_images, val_labels):
+            previews = root / 'previews'
+            for folder in (train_images, train_labels, val_images, val_labels, previews):
                 folder.mkdir(parents=True, exist_ok=True)
             index = 1
-            while (train_images / f'sample_{index:06d}.png').exists() or (train_labels / f'sample_{index:06d}.txt').exists():
+            while any(p.exists() for p in (
+                    train_images / f'sample_{index:06d}.png',
+                    train_labels / f'sample_{index:06d}.txt',
+                    previews / f'sample_{index:06d}.svg',
+                    root / f'sample_{index:06d}_manifest.json')):
                 index += 1
             stem = f'sample_{index:06d}'
             image_path = train_images / (stem + '.png')
             label_path = train_labels / (stem + '.txt')
+            preview_path = previews / (stem + '.svg')
             objs = scene_annotations(scene)
             old_hidden = {obj: obj.hide_render for obj in objs}
             old_path = scene.render.filepath
@@ -359,25 +366,25 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
                 scene.render.image_settings.color_mode = old_color
             if not image_path.exists():
                 raise RuntimeError('Blender did not write the expected image file')
-            lines = [
-                f'{b["class_id"]} {b["x"]:.7f} {b["y"]:.7f} {b["w"]:.7f} {b["h"]:.7f}'
-                for b in boxes
-            ]
-            label_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
-            # YAML maps numeric class IDs to names. Val dir is created empty by design.
-            yaml_lines = [
-                'path: ' + json.dumps(root.as_posix(), ensure_ascii=False),
-                'train: images/train', 'val: images/val',
-                f'nc: {len(classes)}', 'names:',
-            ]
-            for class_id in sorted(classes):
-                yaml_lines.append(f'  {class_id}: {json.dumps(classes[class_id], ensure_ascii=False)}')
-            (root / 'data.yaml').write_text('\n'.join(yaml_lines) + '\n', encoding='utf-8')
+            # Use the exact normalized values serialized into labels for
+            # the SVG preview. No Blender-modified wireframe geometry involved.
+            txt = label_text(boxes)
+            label_path.write_text(txt, encoding='utf-8')
+            image_width = round(scene.render.resolution_x * scene.render.resolution_percentage / 100)
+            image_height = round(scene.render.resolution_y * scene.render.resolution_percentage / 100)
+            preview_path.write_text(
+                svg_from_labels(txt, classes, image_width, image_height, image_path.name),
+                encoding='utf-8',
+            )
+            # YAML paths are relative to the folder containing data.yaml.
+            # The val directory is intentionally empty for single-photo export.
+            (root / 'data.yaml').write_text(portable_data_yaml(classes), encoding='utf-8')
             source = get_source(scene)
             manifest = dict(
                 schema='bvt_studio_2d_yolo_v0.1',
                 scene=scene.name,
                 image=f'images/train/{stem}.png',
+                preview=f'previews/{stem}.svg',
                 labels=f'labels/train/{stem}.txt',
                 image_width=round(scene.render.resolution_x * scene.render.resolution_percentage / 100),
                 image_height=round(scene.render.resolution_y * scene.render.resolution_percentage / 100),
@@ -396,7 +403,8 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
             )
             (root / (stem + '_manifest.json')).write_text(
                 json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
-            self.report({'INFO'}, f'YOLO exported: {len(boxes)} boxes -> {image_path}')
+            scene.bvt_studio.last_preview_svg = str(preview_path)
+            self.report({'INFO'}, f'YOLO exported: {len(boxes)} boxes + preview -> {root}')
             return {'FINISHED'}
         except Exception as exc:
             self.report({'ERROR'}, f'Export failed: {exc}')
@@ -404,10 +412,29 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
             return {'CANCELLED'}
 
 
+class BVTSTUDIO_OT_open_yolo_preview(bpy.types.Operator):
+    bl_idname = 'bvt_studio.open_yolo_preview'
+    bl_label = 'Open Last YOLO Preview'
+    bl_description = 'Open the SVG overlay of the last exported clean PNG in your browser'
+
+    def execute(self, context):
+        filepath = context.scene.bvt_studio.last_preview_svg
+        if not filepath or not Path(filepath).is_file():
+            self.report({'WARNING'}, 'No preview found; export a sample first')
+            return {'CANCELLED'}
+        try:
+            bpy.ops.wm.path_open(filepath=filepath)
+        except Exception as exc:
+            self.report({'ERROR'}, f'Cannot open preview: {exc}')
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 CLASSES = (
     BVTSTUDIO_OT_add_annotation, BVTSTUDIO_OT_register_annotations,
     BVTSTUDIO_OT_renumber, BVTSTUDIO_OT_toggle_preview,
     BVTSTUDIO_OT_validate, BVTSTUDIO_OT_export_yolo,
+    BVTSTUDIO_OT_open_yolo_preview,
 )
 
 

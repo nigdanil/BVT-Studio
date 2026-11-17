@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.3.0-alpha.3
+# BVT Studio — 2.5D Dataset Builder v0.3.0-alpha.5
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -16,7 +16,7 @@ If the Blender version displays the extension-warning prompt, allow installation
 ## Recommended workflow
 
 1. **Photo / Scene:** Click *New Scene from Photo* (makes a separate scene, preserves your original), or select an existing `BVT_Freezer_Image_Plane` and click *Use Selected Image Plane*. Select the camera frame profile and click *Frame Camera to Photo*.
-2. **Glass:** Create/position your own glass Plane slightly **toward camera** from the photo plane. Select it → *Setup Selected Glass Plane*. Tune `Reflections`, `Tint`, `Haze`, `Frost` with sliders. One glass object per independent surface is supported. Never run Glass Setup on the photo plane.
+2. **Glass:** Press *Add Glass* to create a plane in front of the photo, then position/scale it. You can also select an existing Plane and press *Setup Selected Glass Plane*. Tune `Reflections`, `Tint`, `Haze`, `Frost` with sliders. One glass object per independent surface is supported. Never run Glass Setup on the photo plane.
 3. **Glass organization:** When you select any user-created Plane and click *Setup Selected Glass Plane*, BVT Studio assigns a glass shader, moves it into `BVT_Glass` and renumbers every glass plane as `Glass_p_001`, `Glass_p_002`, etc. **Register / Setup Glass All** also recognizes old `Glass`, `Glass.001`, `Glass_01`, `Glas_001` and existing tagged glass overlays, moves them into the same collection and configures their materials (image-textured/photo planes are skipped to avoid overwriting). **Renumber Glass 001...N** changes names and collection membership only. Geometry, position, and user-defined glass settings are preserved. Glass objects remain independent of `BVT_Annotations`.
 4. **Annotations:** Click *Add Annotation* and move/resize the rectangular plane over each visible SKU, or use existing manually made `plane_p_001..N` and click *Register / Color All*. A colored **Wireframe modifier** makes the rectangle visible in viewport. Move the **original rectangle mesh**, not its modifier. Edit Class ID / name on the selected annotation. For default category detection, keep all IDs at `0`, class name `ice_cream`.
 5. *Renumber 001...N*, *Validate YOLO Boxes*, and optionally *Render Outlines: ON* to preview colored bounding boxes in F12. For dataset export, outlines will **always** be hidden temporarily.
@@ -27,7 +27,7 @@ If the Blender version displays the extension-warning prompt, allow installation
 - Image import (and original/current-scene reuse) + alpha-aware unlit photo material.
 - Exact image aspect, orthographic camera, presets for photo, 4:3, 3:4, 16:9, tablet 4:3.
 - Glass on user-created mesh Plane: reflection, haze, tint and frost shader controlled by Blender object custom-property drivers.
-- Automatic `Glass_p_001...N` naming, `BVT_Glass` collection, batch registration/setup and explicit glass renumbering; no automatic creation of glass geometry.
+- Automatic `Glass_p_001...N` naming, `BVT_Glass` collection, batch registration/setup and explicit glass renumbering; *Add Glass* creates a new overlay Plane.
 - Create/register/renumber annotation rectangles, independently colored emission-based outline preview, editable class metadata.
 - Validate rectangles in camera coordinates (outside frame, zero size, class ID gaps, near-duplicates), single-image YOLO `class cx cy w h` export.
 - Clean PNG render, TXT label file, `data.yaml`, per-sample JSON manifest (with annotations, camera profile, glass parameters).
@@ -50,6 +50,31 @@ Run CPython unit tests with `python -m unittest discover -s tests -v`. Then run 
 ```
 
 This slice does **not** yet implement automated completeness checks or a visual YOLO quality-gate report; those are next in the v0.3 roadmap.
+
+
+## YOLO Preview and portable export (v0.3.0-alpha.5)
+
+- **Export Clean Image + YOLO** also creates `previews/sample_000001.svg` (and so on).
+  Open with **Open Last YOLO Preview** or any browser; the SVG points to the clean PNG
+  at `../images/train/sample_000001.png` and draws boxes from the *serialized TXT labels*.
+  **Do not move the SVG away from its dataset folder without the image**: both paths are
+  relative so the entire dataset directory can be moved or copied intact.
+- `data.yaml` no longer includes a `path:` value specific to one Windows computer.
+  Train/validation paths are relative to the directory containing `data.yaml`.
+- The SVG is **for review only** and is never used as training input. Exported PNGs
+  still contain **no colored annotation outlines**.
+- The `images/val` and `labels/val` directories remain empty for one-off export.
+  **Before training**, provide a real validation set from independent source photos.
+  Do **not** randomly split augmented variants of the same original photo between
+  train and val, because that leaks information between splits.
+
+Run Python tests with `python -m unittest discover -s tests -v`. Run the actual
+Blender headless export test from the repository root:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python scripts/blender_export_preview_smoke.py
+```
 
 ## Scene collections and naming
 
@@ -79,7 +104,7 @@ python scripts/build_addon.py
 python -m unittest discover -s tests -v
 ```
 
-The generated **legacy Blender add-on archive** is `dist/BVT_Studio_Blender_Addon_v0.3.0-alpha.3.zip`. It has the `bvt_studio/` Python package at ZIP root, which is the same structure that worked in Blender 5.2.3 for v0.1. This is not a Blender Extensions platform manifest package.
+The generated **legacy Blender add-on archive** is `dist/BVT_Studio_Blender_Addon_v0.3.0-alpha.5.zip`. It has the `bvt_studio/` Python package at ZIP root, which is the same structure that worked in Blender 5.2.3 for v0.1. This is not a Blender Extensions platform manifest package.
 
 See [docs/PUBLISHING.md](docs/PUBLISHING.md) for GitHub initialization and release upload.
 
@@ -90,6 +115,7 @@ bvt_studio_dataset/
   images/train/sample_000001.png
   images/val/                     # EMPTY — prepare independent validation data
   labels/train/sample_000001.txt
+  previews/sample_000001.svg
   labels/val/                     # EMPTY — prepare independent validation data
   sample_000001_manifest.json
   data.yaml
@@ -114,7 +140,7 @@ bvt_studio_dataset/
 | --- | --- |
 | BVT_Planogram_AutoSetup | `scene_tools.py` |
 | BVT_Setup_Selected_Glass_Plane | `glass.py` |
-| BVT_Glass_Overlay | not used: this add-on **does not** generate glass geometry |
+| BVT_Glass_Overlay | replaced by **Add Glass**: the addon creates one simple Plane per overlay (not 3D refrigerator glass geometry) |
 | BVT_YOLO_Annotation_Planes | `annotation.py` |
 | BVT_Annotation_Colored_Outlines v01 | `annotation.py` |
 | BVT_Annotation_Colored_Outlines v02_Renumber | `annotation.py` |

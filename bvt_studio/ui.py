@@ -152,6 +152,9 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
         box.label(text='5. YOLO Export', icon='EXPORT')
         box.prop(settings, 'export_dir', text='Folder')
         box.operator('bvt_studio.export_yolo', text='Export Clean Image + YOLO', icon='FILE_TICK')
+        box.operator('bvt_studio.open_yolo_preview',
+                     text='Open Last YOLO Preview', icon='IMAGE_DATA')
+        box.label(text='SVG preview overlays exported TXT on clean PNG.', icon='INFO')
         box.label(text='One sample per click; val split is manual.', icon='INFO')
 
 CLASSES = (BVTSTUDIO_PT_main,)

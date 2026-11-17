@@ -103,6 +103,10 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         ],
         default='ORIGINAL',
     )
+    last_preview_svg: StringProperty(
+        name='Last exported SVG preview', subtype='FILE_PATH', default='',
+        description='Full path to the last exported YOLO overlay',
+    )
     export_dir: StringProperty(
         name="Output folder", subtype='DIR_PATH', default="//bvt_studio_dataset",
     )
