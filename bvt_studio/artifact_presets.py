@@ -17,13 +17,21 @@ def resolve_glass(scene, settings, active):
     return target
 
 
-def apply_preset(obj, name, intensity, coverage, seed, droplet_scale=1.0, frost_edge=0.35):
+def apply_preset(obj, name, intensity, coverage, seed, droplet_scale=1.0, frost_edge=0.35,
+                 refraction=0.016, relief=0.80):
     """Update only this object's appearance. Geometry and other glass remain unchanged."""
     values = preset_values(name, intensity, coverage)
     seed_offsets(seed)  # Validate before touching any object material.
     size, edge = validate_shape_params(droplet_scale, frost_edge)
     values['bvt_artifact_droplet_scale'] = size
     values['bvt_artifact_frost_edge'] = edge
+    from math import isfinite
+    if not isfinite(float(refraction)) or not 0.0 <= float(refraction) <= 0.04:
+        raise ValueError('Refraction Strength must be in [0, 0.04]')
+    if not isfinite(float(relief)) or not 0.0 <= float(relief) <= 1.0:
+        raise ValueError('Droplet Relief must be in [0, 1]')
+    values['bvt_artifact_refraction'] = float(refraction)
+    values['bvt_artifact_relief'] = float(relief)
     # Ensure the target has a usable material before touching any stored properties.
     if obj.type != 'MESH' or obj.get('bvt_role') != 'glass_overlay':
         raise ValueError('Target is not a registered glass mesh')
@@ -58,7 +66,8 @@ class BVTSTUDIO_OT_apply_glass_preset(bpy.types.Operator):
             obj = resolve_glass(context.scene, settings, context.active_object)
             apply_preset(obj, settings.artifact_preset, settings.artifact_intensity,
                          settings.artifact_coverage, settings.artifact_seed,
-                         settings.artifact_droplet_scale, settings.artifact_frost_edge)
+                         settings.artifact_droplet_scale, settings.artifact_frost_edge,
+                         settings.artifact_refraction, settings.artifact_relief)
             context.view_layer.update()
             self.report({'INFO'}, f'{obj.name}: {settings.artifact_preset}, seed={settings.artifact_seed}')
             return {'FINISHED'}

@@ -151,6 +151,8 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
         layout.prop(settings, 'artifact_coverage', slider=True)
         layout.prop(settings, 'artifact_droplet_scale', slider=True)
         layout.prop(settings, 'artifact_frost_edge', slider=True)
+        layout.prop(settings, 'artifact_refraction', slider=True)
+        layout.prop(settings, 'artifact_relief', slider=True)
         layout.prop(settings, 'artifact_seed')
         layout.operator('bvt_studio.apply_glass_preset',
                         text='Apply Glass Preset', icon='CHECKMARK')
@@ -161,7 +163,9 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
             details.label(text='Active glass overrides:', icon='MATERIAL')
             for prop, title in (('bvt_artifact_seed', 'Object Seed'),
                                 ('bvt_artifact_droplet_scale', 'Object Droplet Scale'),
-                                ('bvt_artifact_frost_edge', 'Object Frost Edge')):
+                                ('bvt_artifact_frost_edge', 'Object Frost Edge'),
+                                ('bvt_artifact_refraction', 'Object Refraction'),
+                                ('bvt_artifact_relief', 'Object Droplet Relief')):
                 if prop in selected:
                     details.prop(selected, f'["{prop}"]', text=title)
             details.label(text='Refresh Pattern after changing Object Seed.', icon='INFO')

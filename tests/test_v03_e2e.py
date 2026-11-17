@@ -33,7 +33,7 @@ class TestV03EndToEndContract(unittest.TestCase):
 
     def test_maintainer_build_filename_is_current(self):
         build_script = (ROOT/'scripts'/'build_addon.py').read_text(encoding='utf-8')
-        self.assertIn('BVT_Studio_Blender_Addon_v0.4.0-alpha.2-ui.1.zip', build_script)
+        self.assertIn('BVT_Studio_Blender_Addon_v0.4.0-alpha.3.zip', build_script)
 
     def test_temporary_output_no_assets_or_zip(self):
         code = SCRIPT.read_text(encoding='utf-8')

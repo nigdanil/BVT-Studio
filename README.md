@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.2-ui.1
+# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.3
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -367,3 +367,45 @@ Blender smoke (run from repository root):
 "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
   --background --factory-startup --python scripts/blender_glass_artifacts_smoke.py
 ```
+
+
+## Glass Realism v0.4.0-alpha.3 (2.5D source-photo warp)
+
+Glass artifacts use a new **render-only** shader layer. It introduces contrast-
+shaded droplet rims, a seeded local displacement of source-photo UVs inside
+individual droplets, broad moisture islands, and fine Voronoi crystal branches
+strengthened in frost regions. No mesh, camera or YOLO coordinates are changed.
+
+**The distortion is an image-space approximation, not physically simulated
+ray refraction or a real 3D water surface.** It works when the source photo is a
+BVT-style rectangle with affine UVs, even when the Photo Plane is rotated in
+3D. Imported photos with unsupported/non-affine UVs automatically retain
+shaded rim, wetness and frost, but disable photo resampling to avoid projecting
+the wrong image pixels. Two glass surfaces have independent materials and
+seeds. The unmodified source photo remains underneath both overlays.
+
+New glass settings: **Refraction Strength** (0–0.04, default .016) and
+**Droplet Relief** (0–1, default .8). Both have per-object overrides; Apply
+Preset sets them for the targeted glass, Refresh Pattern rebuilds shader data.
+The export JSON manifest records both values. For a stronger result, select a
+Glass Target, `Heavy Condensation`, Intensity 1.0, Coverage .70, Droplet Scale
+1.25, Refraction .024, Relief .95 and Seed 72, then press Apply Glass Preset.
+
+### Render and compare every preset (Blender GUI is not required)
+
+Run from repository root (Git Bash):
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup \
+  --python scripts/blender_glass_visual_gallery.py -- \
+  --output "D:/BVT-Studio/qa_renders/glass"
+```
+
+The smoke test saves **eight actual PNGs**: source, Clean, Light Condensation,
+Heavy Condensation, Frost, Dirty Glass, Reflections, and another heavy
+condensation render with a different seed. The script checks file creation,
+material node connectivity, different resulting PNGs and unchanged glass
+transform. Rendering success alone **does not certify photorealism**: inspect
+the PNGs side by side at 100% and against real fridge photographs. The output
+folder is ignored by Git. Existing v0.3 E2E YOLO smoke tests remain supported.

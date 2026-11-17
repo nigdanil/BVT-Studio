@@ -28,6 +28,10 @@ SHAPE_DEFAULTS = {
                                     'Scale of the three droplet size bands'),
     'bvt_artifact_frost_edge': (0.35, 0.0, 1.0,
                                  'Additional frost near the glass perimeter'),
+    'bvt_artifact_refraction': (0.016, 0.0, 0.04,
+                                'Local photo UV warp inside droplets'),
+    'bvt_artifact_relief': (0.80, 0.0, 1.0,
+                            'Brightness contrast of droplet rims'),
 }
 
 
@@ -404,6 +408,10 @@ def configure_glass(obj):
     output = nodes.new('ShaderNodeOutputMaterial')
     output.location = (2010, 160)
     links.new(mix.outputs[0], output.inputs['Surface'])
+    from .glass_realism import build_realistic_glass
+    build_realistic_glass(obj, nodes, links, mix.outputs[0], output, tex,
+                          offset.outputs['Vector'], droplets_strength.outputs[0],
+                          frost_union.outputs[0], frost_strength.outputs[0])
     if not obj.material_slots:
         obj.data.materials.append(mat)
     else:

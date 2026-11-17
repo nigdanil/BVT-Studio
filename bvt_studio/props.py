@@ -65,6 +65,14 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Frost Edge', default=0.35, min=0.0, max=1.0,
         description='Additional irregular frost near the perimeter of this glass',
     )
+    artifact_refraction: FloatProperty(
+        name='Refraction Strength', default=0.016, min=0.0, max=0.04,
+        precision=3, description='Approximate local UV distortion inside drops',
+    )
+    artifact_relief: FloatProperty(
+        name='Droplet Relief', default=0.80, min=0.0, max=1.0,
+        description='Contrast of bright and dark droplet rims',
+    )
     artifact_seed: IntProperty(
         name='Seed', default=42, min=0, max=2147483647,
         description='Deterministic microstructure seed for the selected glass plane',

@@ -10,3 +10,6 @@ dist/
 bvt_studio_dataset/
 *.log
 .DS_Store
+
+# Local Blender visual QA output; inspect before approving shader changes.
+qa_renders/

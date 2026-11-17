@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0-alpha.3 — 2026-11-17
+
+- Add 2.5D local photo UV resampling in droplets; source-relative coordinates
+  support rotated Photo Planes; skip unsupported image UVs safely.
+- Enhance unlit droplet relief via bright/dark edge rings and create seeded
+  wet-patch condensation and crystalline branching overlays for frost.
+- Introduce per-Glass Refraction Strength and Droplet Relief controls with
+  independent material drivers, presets and manifest fields.
+- Add Blender headless visual gallery of eight rendered PNGs for human QA;
+  no ZIP or downloaded stock reference images.
+
+
 ## 0.4.0-alpha.2-ui.1 — 2026-11-17
 
 - Replace the very long sidebar with eight native collapsible Blender sub-panels.

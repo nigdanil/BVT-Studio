@@ -403,6 +403,8 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
                          artifact_seed=o.get('bvt_artifact_seed', 0),
                          artifact_droplet_scale=o.get('bvt_artifact_droplet_scale', 1.0),
                          artifact_frost_edge=o.get('bvt_artifact_frost_edge', 0.35),
+                         artifact_refraction=o.get('bvt_artifact_refraction', 0.016),
+                         artifact_relief=o.get('bvt_artifact_relief', 0.80),
                          artifact_preset=o.get('bvt_artifact_preset', 'CUSTOM'))
                     for o in scene.objects if o.get('bvt_role') == 'glass_overlay'
                 ],
