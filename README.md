@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.2.0
+# BVT Studio — 2.5D Dataset Builder v0.2.2
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -119,3 +119,49 @@ Source code is distributed under **GPL-3.0-or-later**, consistent with the BVT p
 This is a Python-compiled, ZIP-verified **prototype**. Runtime integration inside Blender 5.2.3 is not tested in this build environment. Please test against a copy of your `.blend` before publishing a formal tested release.
 
 For one-command GitHub creation and beta publication (Git Bash, after `gh auth login` and a Blender smoke test), run `bash scripts/publish_github.sh`. This script is **not executed as part of ZIP installation**.
+
+
+### Upgrading from 0.2.0 to 0.2.1
+
+Blender loads the add-on code from its **installed extensions/addons folder**, not
+from the GitHub repository. A `git pull` alone will **not** update Blender.
+
+1. In Blender > Preferences > Get Extensions / Add-ons, remove or disable
+   the old `BVT Studio` installation. Restart Blender.
+2. Build the installable ZIP using `python scripts/build_addon.py` and
+   install it from disk. Restart Blender again.
+3. The sidebar must display **BVT Studio v0.2.1**. If not, an older add-on
+   copy remains installed. Check the add-on path via Blender's Python console:
+   `import bvt_studio; print(bvt_studio.__file__, bvt_studio.bl_info['version'])`.
+
+- **Use Selected / Current Photo** accepts the selected textured mesh, but keeps
+  the existing `Source` when an untextured `Plane` or glass Plane is active.
+- **Setup Selected Planes (Batch)** accepts multiple selected glass Planes even
+  with default names `Plane`, `Plane.001` etc., and organizes them in `BVT_Glass`.
+  It refuses to overwrite image-textured and annotation meshes.
+- If Blender shows `//bvt_studio_dataset` in red on an unsaved project, save the
+  `.blend` or select an absolute export path before exporting.
+
+
+### Add Glass — no manual Plane creation (v0.2.2)
+
+1. Click **New Scene from Photo** (or set Source to a textured Image Plane).
+2. In **Glass / Artifacts**, click **Add Glass**. A new mesh named
+   `Glass_p_001` is created and registered in `BVT_Glass`.
+3. The selected Plane has the procedural material and editable Reflection,
+   Tint, Haze, and Frost parameters already attached.
+4. Use **G** to move and **S** to scale the Plane over the actual glass part of
+   the photograph. Click **Add Glass** again for a second area (`Glass_p_002`).
+
+On the standard top-down freezer photo, the first two new panels start over
+approximate left and right halves. These are **editable guides**; they do not
+identify the real glass boundaries automatically. Additional planes can be
+created and adjusted independently. The source photo, camera and annotations
+are never changed by this command.
+
+If the same `.blend` already has a `Glass_p_001` object in another scene,
+Blender will choose the next globally available object name (Blender object
+names are global, not per scene). Existing glass planes remain untouched.
+
+Install the newly built `dist/BVT_Studio_Blender_Addon_v0.2.2.zip` into Blender,
+then restart Blender. Confirm that the sidebar shows **BVT Studio v0.2.2**.

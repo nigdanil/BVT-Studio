@@ -5,7 +5,10 @@ Adapted from BVT_Setup_Selected_Glass_Plane_v02.py; no geometry is created.
 import bpy
 import re
 import uuid
-from .common import make_material_transparent, ensure_collection
+from mathutils import Matrix, Vector
+from .common import (
+    make_material_transparent, ensure_collection, get_source, image_from_mesh,
+)
 
 DEFAULTS = {
     'bvt_glass_reflection': (0.10, 'Artificial LED-glass reflections'),
@@ -195,6 +198,39 @@ def configure_glass(obj):
 # its own BVT_Glass collection; glass never goes in BVT_Annotations.
 GLASS_COLLECTION = 'BVT_Glass'
 GLASS_PREFIX = 'Glass_p_'
+
+# The automatically created surface is an initial editable guide, not a
+# reconstruction of the refrigerator lid. Fine tune its corners in the viewport.
+DEFAULT_GLASS_WIDTH_FRACTION = 0.38
+DEFAULT_GLASS_HEIGHT_FRACTION = 0.76
+DEFAULT_GLASS_CAMERA_OFFSET_M = 0.02
+
+
+def default_glass_rect(xmin, xmax, ymin, ymax, slot):
+    """Return local width, height and center for an initial glass rectangle.
+
+    First two clicks target approximate left/right halves of a top-down photo.
+    Further surfaces start near center. The user positions every glass Plane.
+    This function is deliberately Blender-independent for unit testing.
+    """
+    width = xmax - xmin
+    height = ymax - ymin
+    if width <= 1e-8 or height <= 1e-8:
+        raise ValueError('Source Image Plane has invalid bounds')
+    fraction_x = (-0.215, 0.215, 0.0)[slot % 3]
+    center_x = (xmin + xmax) / 2.0 + fraction_x * width
+    center_y = (ymin + ymax) / 2.0
+    return (width * DEFAULT_GLASS_WIDTH_FRACTION,
+            height * DEFAULT_GLASS_HEIGHT_FRACTION, center_x, center_y)
+
+
+def next_glass_name():
+    """Object names are global across .blend scenes, so check bpy.data."""
+    i = 1
+    while bpy.data.objects.get(f'{GLASS_PREFIX}{i:03d}') is not None:
+        i += 1
+    return f'{GLASS_PREFIX}{i:03d}', i
+
 _GLASS_NUMBER_RX = re.compile(r'^Glass_p_(\d+)(?:\.(\d+))?$', re.I)
 _LEGACY_GLASS_RX = re.compile(
     r'^(?:Glas|Glass)(?:[_ ]?(\d+))?(?:\.(\d+))?$', re.I)
@@ -291,6 +327,80 @@ def renumber_glass(scene, objects):
     return len(ordered)
 
 
+class BVTSTUDIO_OT_add_glass(bpy.types.Operator):
+    bl_idname = 'bvt_studio.add_glass'
+    bl_label = 'Add Glass Plane'
+    bl_description = ('Create and configure a movable glass Plane in front of '
+                      'the source photo, inside BVT_Glass')
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT' and hasattr(context.scene, 'bvt_studio')
+
+    def execute(self, context):
+        scene = context.scene
+        source = get_source(scene)
+        if source is None or source.type != 'MESH' or image_from_mesh(source) is None:
+            self.report({'ERROR'}, 'First import a photo or assign a textured Source Plane')
+            return {'CANCELLED'}
+        if not source.data.vertices or not source.data.polygons:
+            self.report({'ERROR'}, 'Source Image Plane has no valid mesh')
+            return {'CANCELLED'}
+        try:
+            coords = [v.co for v in source.data.vertices]
+            xmin, xmax = min(p.x for p in coords), max(p.x for p in coords)
+            ymin, ymax = min(p.y for p in coords), max(p.y for p in coords)
+            existing_count = len(scene_glass(scene))
+            width, height, center_x, center_y = default_glass_rect(
+                xmin, xmax, ymin, ymax, existing_count)
+            name, index = next_glass_name()
+            mesh = bpy.data.meshes.new('BVT_Glass_Plane_Mesh')
+            mesh.from_pydata(
+                [(-width / 2, -height / 2, 0),
+                 (width / 2, -height / 2, 0),
+                 (width / 2, height / 2, 0),
+                 (-width / 2, height / 2, 0)],
+                [], [(0, 1, 2, 3)])
+            mesh.update()
+            obj = bpy.data.objects.new(name, mesh)
+            ensure_collection(scene, GLASS_COLLECTION).objects.link(obj)
+
+            # Preserve the photo plane's orientation/scale; move it slightly
+            # toward the actual active camera so glass composites over photo.
+            matrix = source.matrix_world @ Matrix.Translation(
+                (center_x, center_y, 0.0))
+            camera = scene.camera
+            if camera is not None:
+                front = (camera.matrix_world.to_quaternion() @
+                         Vector((0, 0, 1))).normalized()
+            else:
+                front = (source.matrix_world.to_quaternion() @
+                         Vector((0, 0, 1))).normalized()
+            matrix.translation += front * DEFAULT_GLASS_CAMERA_OFFSET_M
+            obj.matrix_world = matrix
+            obj['bvt_glass_index'] = index
+            configure_glass(obj)
+
+            # Select only the newly created surface for immediate resizing.
+            for selected in context.selected_objects:
+                selected.select_set(False)
+            obj.select_set(True)
+            context.view_layer.objects.active = obj
+            context.view_layer.update()
+            self.report({'INFO'},
+                        f'Created {obj.name}; adjust size and position over glass')
+            return {'FINISHED'}
+        except Exception as exc:
+            # The operation is undoable; don't leave a half-configured Plane.
+            if 'obj' in locals():
+                bpy.data.objects.remove(obj, do_unlink=True)
+            elif 'mesh' in locals():
+                bpy.data.meshes.remove(mesh)
+            self.report({'ERROR'}, f'Add Glass failed: {exc}')
+            return {'CANCELLED'}
+
+
 class BVTSTUDIO_OT_setup_glass(bpy.types.Operator):
     bl_idname = 'bvt_studio.setup_glass'
     bl_label = 'Setup Selected Glass'
@@ -307,6 +417,36 @@ class BVTSTUDIO_OT_setup_glass(bpy.types.Operator):
             renumber_glass(context.scene, objects)
             context.view_layer.update()
             self.report({'INFO'}, f'Glass: {obj.name} (collection {GLASS_COLLECTION})')
+            return {'FINISHED'}
+        except Exception as exc:
+            self.report({'ERROR'}, str(exc))
+            return {'CANCELLED'}
+
+
+class BVTSTUDIO_OT_setup_selected_glass_batch(bpy.types.Operator):
+    bl_idname = 'bvt_studio.setup_selected_glass_batch'
+    bl_label = 'Setup Selected Glass Planes (Batch)'
+    bl_description = 'Turn all selected untextured mesh planes into Glass_p_001...N'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # Exclude other types; do not treat the photo or YOLO planes as glass.
+        selected = [obj for obj in context.selected_objects if obj.type == 'MESH']
+        if not selected:
+            self.report({'ERROR'}, 'Select one or more empty glass mesh Planes')
+            return {'CANCELLED'}
+        # Validate ALL selected objects before changing any of them.
+        try:
+            for obj in selected:
+                validate_glass_target(obj)
+            for obj in selected:
+                configure_glass(obj)
+            all_glass = scene_glass(context.scene)
+            organize_glass(context.scene, all_glass)
+            renumber_glass(context.scene, all_glass)
+            context.view_layer.update()
+            self.report({'INFO'},
+                        f'Configured {len(selected)} selected glass Plane(s) in {GLASS_COLLECTION}')
             return {'FINISHED'}
         except Exception as exc:
             self.report({'ERROR'}, str(exc))
@@ -372,8 +512,9 @@ class BVTSTUDIO_OT_renumber_glass(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-CLASSES = (BVTSTUDIO_OT_setup_glass, BVTSTUDIO_OT_organize_glass,
-           BVTSTUDIO_OT_renumber_glass)
+CLASSES = (BVTSTUDIO_OT_add_glass, BVTSTUDIO_OT_setup_glass,
+           BVTSTUDIO_OT_setup_selected_glass_batch,
+           BVTSTUDIO_OT_organize_glass, BVTSTUDIO_OT_renumber_glass)
 
 
 def register():
