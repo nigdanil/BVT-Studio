@@ -1,4 +1,5 @@
 """BVT Studio — 2.5D image, glass and YOLO workflow for Blender 5.2+."""
+BUILD_STAGE = "alpha.2"
 bl_info = {
     "name": "BVT Studio — 2.5D Dataset Builder",
     "author": "BVT Studio contributors",
@@ -9,9 +10,9 @@ bl_info = {
     "category": "3D View",
 }
 
-from . import props, scene_tools, glass, annotation, scene_lock, ui
+from . import props, scene_tools, glass, annotation, scene_lock, depth, ui
 
-MODULES = (props, scene_tools, glass, annotation, scene_lock, ui)
+MODULES = (props, scene_tools, glass, annotation, scene_lock, depth, ui)
 
 
 def register():

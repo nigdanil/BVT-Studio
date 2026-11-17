@@ -38,6 +38,7 @@ class TestSceneLock(unittest.TestCase):
                      and node.name in {'_capture', '_restore', '_protect', '_is_local',
                                        'managed_groups', 'apply_scene_locks'}]
         env = {'json': json, 'LOCK_MARKER': '_bvt_studio_lock_snapshot_v1',
+               '_sync_depth': lambda scene: None,
                'GROUP_FIELDS': (('photo', 'photo_edit_enable'),
                                 ('camera', 'camera_edit_enable'),
                                 ('light', 'light_edit_enable'),

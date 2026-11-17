@@ -1,6 +1,6 @@
 """Blender sidebar panel; no geometry or render business logic."""
 import bpy
-from . import bl_info
+from . import bl_info, BUILD_STAGE
 from .common import scene_annotations
 from .annotation import PREVIEW_PROP
 from .glass import scene_glass
@@ -19,7 +19,7 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
         settings = scene.bvt_studio
         selected = context.active_object
         version = '.'.join(str(v) for v in bl_info['version'])
-        layout.label(text=f'BVT Studio v{version}', icon='INFO')
+        layout.label(text=f'BVT Studio v{version}-{BUILD_STAGE}', icon='INFO')
 
         box = layout.box()
         box.label(text='0. Scene Editing / Locks', icon='RESTRICT_SELECT_OFF')
@@ -40,6 +40,19 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
             row.label(text='Editable' if enabled else 'Locked',
                       icon='UNLOCKED' if enabled else 'LOCKED')
         box.label(text='Only BVT-managed objects are protected.', icon='INFO')
+
+        depth_box = layout.box()
+        depth_box.label(text='0.1 Layer Depth / Photo Normal', icon='CONSTRAINT')
+        depth_box.prop(settings, 'photo_depth_lock')
+        depth_box.prop(settings, 'glass_depth_lock')
+        depth_box.prop(settings, 'annotations_depth_lock')
+        depth_box.prop(settings, 'depth_target_glass', text='Glass Target')
+        depth_box.prop(settings, 'glass_depth_offset_m', text='Depth Offset')
+        depth_box.operator('bvt_studio.apply_glass_depth',
+                           text='Apply Glass Depth Offset', icon='ARROW_LEFTRIGHT')
+        depth_box.operator('bvt_studio.reset_layer_depth',
+                           text='Reset Layer Depth', icon='FILE_REFRESH')
+        depth_box.label(text='Depth is relative to rotated Photo Plane.', icon='INFO')
 
         box = layout.box()
         box.label(text='1. Photo / Scene', icon='IMAGE_DATA')

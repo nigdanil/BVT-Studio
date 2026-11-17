@@ -180,3 +180,44 @@ viewport input; Python/Blender operations are not sandboxed.
 **Not yet implemented:** depth locks relative to the source photo normal, Glass
 Depth Offset and Reset Layer Depth (roadmap 1.0.1). Do not confuse the current
 full-transform group locks with geometric plane-depth constraints.
+
+
+## 0.3.0-alpha.2 — Photo-relative Layer Depth (roadmap 1.0.1)
+
+- `Photo / Glass / Annotations - Lock Depth` checkboxes are enabled by default.
+- The add-on installs a **Limit Location** constraint (`BVT_Studio_Photo_Relative_Depth`)
+  with `Owner Space = Custom` based on the original Photo Plane. It restricts
+  motion along the **photo normal**, not the global world Z axis. Normal `G`
+  moving along photo surface, rotations and scaling remain available if the
+  corresponding `Edit Enable` is active.
+- The Photo is referenced by a hidden-from-selection control Empty inside
+  `BVT_Studio_Controls`; this prevents circular constraint dependencies.
+- To edit glass depth even when the glass cannot be selected, choose it via
+  `Glass Target`, enter `Depth Offset` in meters, then click **Apply Glass Depth Offset**.
+  The offset is measured towards the **active camera**. This moves the origin
+  along the photo normal and leaves its in-plane coordinates unchanged.
+- **Reset Layer Depth** restores photo baseline and configured glass/annotation
+  depths, and re-aligns the reference frame when the photo was rotated.
+- Existing photo/glass/annotation geometry is kept on initial enabling. If a
+  legacy overlay is coplanar, press Reset to place it at a visible depth.
+- Disabling a depth checkbox mutes BVT's own constraint; enabling it again
+  restores the earlier configured depth. Unrelated constraints are not edited.
+- Constraint controls affect object-origin transforms in Object Mode. Mesh
+  Edit Mode, external scripts and intentional constraint changes can bypass
+  them. This is an ergonomics feature, not a security control.
+
+### Blender acceptance test for rotated photo
+
+1. Back up `.blend`. Install the new ZIP, and restart Blender.
+2. Create a photo scene; add two Glass planes and three annotations.
+3. Turn `Glass Edit Enable` ON and use the `Glass - Lock Depth` checkbox.
+4. Try `G, Z` on a flat photo: the visual depth must stay fixed. `G, X/Y`
+   should still work. For a tilted photo, use global `G` directions with a
+   normal component and verify that the final position still lies on the
+   photo-relative layer, even though its world Z may change when moving in XY.
+5. Rotate the Photo Plane with Photo Edit enabled (e.g. X=30 degrees,
+   Y=20 degrees), then click **Reset Layer Depth**; move glass/annotations
+   in photo plane again and verify no visible drifting along the normal.
+6. Turn `Annotations - Lock Depth` OFF and ON, inspect modifier-free original
+   mesh corners; use **Export Clean Image + YOLO** as the smoke test.
+7. Save/reopen the `.blend` and confirm constraint targets and offsets persist.

@@ -123,6 +123,8 @@ def fit_camera_to_source(scene):
     # Fill: intentional crop if camera aspect differs from source aspect.
     frame_width = min(width, height * ratio) * 0.998
     camera.data.ortho_scale = frame_width if ratio >= 1.0 else frame_width / ratio
+    from .depth import sync_depth_constraints
+    sync_depth_constraints(scene)
     return (res_x, res_y)
 
 
@@ -188,6 +190,8 @@ class BVTSTUDIO_OT_use_source(bpy.types.Operator):
             return {'CANCELLED'}
         context.scene.bvt_studio.source_object = obj
         obj['bvt_role'] = 'planogram_image'
+        from .scene_lock import apply_scene_locks
+        apply_scene_locks(context.scene)
         if used_existing:
             self.report({'INFO'}, f'Keeping existing photo source: {obj.name}')
         else:

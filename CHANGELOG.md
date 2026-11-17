@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0-alpha.2 — 2026-11-17
+
+- Add Photo-relative layer depth constraints in the source image coordinate system.
+- Protect Photo, Glass and YOLO annotation depth independently of selection locks.
+- Support photo object rotations, parent transforms and non-uniform scale.
+- Add selected Glass Depth Offset (camera-facing) and Reset Layer Depth.
+- Preserve existing positions for previously configured glass/annotation meshes.
+- Project original YOLO mesh vertices through evaluated object transforms (including depth constraints).
+- New depth controls are added to the sidebar; future Blender smoke test required.
+
+
 ## 0.3.0-alpha.1 — 2026-11-17
 
 - Add Scene Editing / Locks group and per-group Edit Enable toggles.

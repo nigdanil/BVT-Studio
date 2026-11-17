@@ -10,6 +10,11 @@ def on_lock_change(self, context):
     on_group_settings_changed(self, context)
 
 
+def on_depth_change(self, context):
+    from .depth import on_depth_settings_changed
+    on_depth_settings_changed(self, context)
+
+
 class BVTStudioSettings(bpy.types.PropertyGroup):
     scene_locks_enabled: BoolProperty(
         name='Scene protection active', default=False, update=on_lock_change,
@@ -25,6 +30,28 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Glass Edit Enable', default=True, update=on_lock_change)
     annotations_edit_enable: BoolProperty(
         name='Annotations Edit Enable', default=True, update=on_lock_change)
+
+    photo_depth_lock: BoolProperty(
+        name='Photo - Lock Depth', default=True, update=on_depth_change,
+        description='Keep photo origin in its initial reference plane',
+    )
+    glass_depth_lock: BoolProperty(
+        name='Glass - Lock Depth', default=True, update=on_depth_change,
+        description='Keep glass inside a plane parallel to source photo',
+    )
+    annotations_depth_lock: BoolProperty(
+        name='Annotations - Lock Depth', default=True, update=on_depth_change,
+        description='Keep YOLO annotation origins at fixed photo-relative depth',
+    )
+    depth_target_glass: PointerProperty(
+        name='Glass Surface', type=bpy.types.Object,
+        description='Glass to reposition, even if viewport selection is locked',
+    )
+    glass_depth_offset_m: FloatProperty(
+        name='Depth Offset', default=0.012, min=0.001, max=0.150,
+        precision=4, subtype='DISTANCE', unit='LENGTH',
+        description='Distance to photo towards camera for the chosen Glass Plane',
+    )
 
     source_object: PointerProperty(
         name="Image Plane", type=bpy.types.Object,

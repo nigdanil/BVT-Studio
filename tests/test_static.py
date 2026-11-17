@@ -46,7 +46,7 @@ class TestSource(unittest.TestCase):
         init = (PACKAGE / '__init__.py').read_text()
         ui = (PACKAGE / 'ui.py').read_text()
         props = (PACKAGE / 'props.py').read_text()
-        self.assertIn('scene_lock, ui', init)
+        self.assertIn('scene_lock, depth, ui', init)
         for key in ('photo_edit_enable', 'camera_edit_enable', 'light_edit_enable',
                     'glass_edit_enable', 'annotations_edit_enable'):
             self.assertIn(key, ui)

@@ -1,8 +1,7 @@
 """Non-destructive per-group viewport selection/transform guards.
 
-This stage intentionally DOES NOT implement plane-relative depth constraints:
-Blender's lock_location[2] is not a robust constraint to a rotated photo plane.
-Depth locking is the next roadmap stage (1.0.1).
+Selection/rotation/scale guards complement photo-relative depth constraints.
+Normal depth uses its own constraint in depth.py rather than global Z locking.
 """
 
 import json
@@ -104,6 +103,12 @@ def _protect(obj):
     # Keep the user's 4D rotation mode unchanged; this is a selection/transform lock.
 
 
+def _sync_depth(scene):
+    # Deferred import avoids a cycle between depth and scene registration.
+    from .depth import sync_depth_constraints
+    sync_depth_constraints(scene)
+
+
 def apply_scene_locks(scene):
     """Apply or restore locks for objects belonging to the active BVT scene.
 
@@ -128,6 +133,9 @@ def apply_scene_locks(scene):
     for obj in scene.objects:
         if obj.as_pointer() not in touched and _is_local(obj) and obj.get(LOCK_MARKER) is not None:
             _restore(obj)
+    # Scene selection guards and normal-depth guards are independent. New
+    # glass/annotation objects are registered through this central pathway.
+    _sync_depth(scene)
     return groups
 
 

@@ -116,6 +116,7 @@ def collect_boxes(scene):
     cam = scene.camera
     if cam is None or cam.type != 'CAMERA':
         return boxes, ['No active scene camera'], classes
+    depsgraph = bpy.context.evaluated_depsgraph_get()
     objects = [obj for obj in scene_annotations(scene) if obj.get('bvt_enabled', True)]
     if not objects:
         return boxes, ['No enabled annotation planes'], classes
@@ -131,8 +132,10 @@ def collect_boxes(scene):
         if not obj.data.vertices:
             issues.append(f'{obj.name}: empty mesh')
             continue
-        # A plane may contain more vertices; bounding box of projected mesh is used.
-        ndc = [world_to_camera_view(scene, cam, obj.matrix_world @ v.co)
+        # Use original vertices (not Wireframe-modified geometry), but the
+        # evaluated object transform so constraints and YOLO export agree.
+        evaluated_matrix = obj.evaluated_get(depsgraph).matrix_world
+        ndc = [world_to_camera_view(scene, cam, evaluated_matrix @ v.co)
                for v in obj.data.vertices]
         if any(p.z <= 0 for p in ndc):
             issues.append(f'{obj.name}: plane behind camera')
