@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.3
+# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.4-step1
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -409,3 +409,89 @@ material node connectivity, different resulting PNGs and unchanged glass
 transform. Rendering success alone **does not certify photorealism**: inspect
 the PNGs side by side at 100% and against real fridge photographs. The output
 folder is ignored by Git. Existing v0.3 E2E YOLO smoke tests remain supported.
+
+## Hybrid Glass Artifacts v2 — v0.4.0-alpha.4-step1
+
+The previous Noise/Voronoi-based Light and Heavy Condensation were insufficiently
+realistic. This experimental step uses a generated, per-Glass **RGBA atlas**:
+red = shaped droplet height, green/blue = encoded X/Y surface slopes, alpha =
+spatially varying wet film. Beads are seeded, irregular, mixed-sized and
+occasionally elongated by gravity. Shader pseudo-specular rims and image-space
+source-photo refraction use the same coherent droplet surface. This is still
+**2.5D optical approximation**, not full optical ray tracing.
+
+**Only `LIGHT_CONDENSATION` and `HEAVY_CONDENSATION` use this new shader.**
+Other presets remain on the alpha.3 implementation. A per-object generated
+Blender image (`BVT_Hybrid_Droplets_<uid>`) is saved in the .blend, reused
+when parameters don't change, and regenerated on Apply/Refresh after seed,
+coverage, droplet scale, wetness, or micro-droplet changes. No PNG texture
+files or external Python packages are downloaded; requires NumPy shipped
+with Blender. Non-affine source photo UVs gracefully disable re-sampling.
+
+### Blender UI — Glass Artifact Engine
+
+Select the target Glass Plane and choose Light Condensation / Heavy
+Condensation. New controls **Wetness** (0–1) and **Micro Droplets** (0–1)
+join Coverage, Droplet Scale, Refraction Strength, Droplet Relief and Seed.
+Press **Apply Glass Preset**, then render F12. For selected-object custom
+property edits use **Refresh Glass Pattern**.
+
+### Visual QA (Blender 5.2.3)
+
+From Git Bash, run the new gallery with a synthetic high-contrast source:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup \
+  --python scripts/blender_hybrid_condensation_gallery.py -- \
+  --output "D:/BVT-Studio/qa_renders/hybrid"
+```
+
+For genuine retail inspection **pass an actual original fridge PNG/JPEG**:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup \
+  --python scripts/blender_hybrid_condensation_gallery.py -- \
+  --photo "D:/Images/freezer_photo.png" \
+  --output "D:/BVT-Studio/qa_renders/hybrid_freezer"
+```
+
+Each run outputs `00_source.png`, `01_clean.png`, `02_hybrid_light.png`,
+`03_hybrid_heavy.png`, `04_hybrid_heavy_seed73.png` and `hybrid_manifest.json`.
+The test checks changed rendered pixels, independent glass materials and
+unchanged glass transforms; **its `OK` does not establish photorealism**.
+Inspect full-size PNGs next to actual droplet photographs before producing
+YOLO training data. Existing YOLO code and dataset export are unchanged.
+
+
+## Current build stage
+
+`alpha.4-step3` adds UV-fitted freezer glass sections and an optional inner aperture mask for Hybrid Condensation visual QA.
+
+
+## Precision Glass Mask QA (`v0.4.0-alpha.4-step4`)
+
+Assign an optional PNG mask to an individual `Glass_p_*` via **Glass Artifact Engine → Mask PNG → Assign PNG Mask (Pack)**.
+Black RGB forbids all glass effects; white permits them; gray partially blends them.
+The image is read in the Glass plane's UV space and *packed into the .blend*;
+the original filesystem path is stored for traceability. Each glass object owns
+its PNG image reference, independent seed, and enabled state. Use **Toggle PNG Mask**
+to compare enabled/disabled without losing a packed mask. A requested but missing
+packed image raises an error rather than silently rendering an unmasked effect.
+The optional rectangular inset/aperture masking remains active.
+
+**QA_TRANSPARENT** is the exact no-effect reference. Do not use legacy CLEAN as a
+pixel-identical control, because it intentionally retains subtle reflections.
+
+Run `scripts/blender_precision_mask_qa.py` with Blender 5.2+ and `--photo` pointing
+at the real source PNG. The script creates four UV-fitted Glass planes, imports
+four independent synthetic test PNG masks (with black forbidden openings and
+mid-gray bands), renders per-glass grayscale mask PNGs and a union debug PNG,
+compares all effect renders against the QA_TRANSPARENT control, and writes a
+report including `leakage_pixels`, `leakage_ratio`, and `leakage_bbox_xyxy`.
+These synthetic QA masks test the mask *mechanism*, not the precise outline of
+your freezer frame. Replace them with hand-drawn or segmented masks for production.
+Use `--save-blend` only when you explicitly want a new QA .blend saved; masks and
+parameters will be packed and persist across reopening. The QA script does not
+write to a user-supplied `.blend`, and never edits YOLO objects.

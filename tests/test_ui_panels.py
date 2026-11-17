@@ -15,7 +15,8 @@ EXPECTED = {
         'add_glass', 'setup_glass', 'setup_selected_glass_batch',
         'organize_glass', 'renumber_glass',
     ),
-    'BVTSTUDIO_PT_glass_artifacts': ('apply_glass_preset', 'refresh_glass_pattern'),
+    'BVTSTUDIO_PT_glass_artifacts': ('apply_glass_preset', 'refresh_glass_pattern',
+                                      'assign_precision_mask', 'toggle_precision_mask'),
     'BVTSTUDIO_PT_annotations': (
         'add_annotation', 'register_annotations', 'renumber', 'toggle_preview',
         'refresh_annotation_list', 'select_all_annotations',
@@ -98,7 +99,7 @@ class TestCollapsibleSidebar(unittest.TestCase):
                 self.assertCountEqual(found, ['bvt_studio.' + name for name in expected])
             all_ids.extend(found)
         self.assertEqual(len(all_ids), len(set(all_ids)), Counter(all_ids))
-        self.assertEqual(len(all_ids), 26)
+        self.assertEqual(len(all_ids), 28)
         self.assertEqual(operator_ids(classes['BVTSTUDIO_PT_main']), [])
 
     def test_existing_properties_and_lists_still_available(self):

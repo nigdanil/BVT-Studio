@@ -18,9 +18,13 @@ def resolve_glass(scene, settings, active):
 
 
 def apply_preset(obj, name, intensity, coverage, seed, droplet_scale=1.0, frost_edge=0.35,
-                 refraction=0.016, relief=0.80):
+                 refraction=0.016, relief=0.80, wetness=0.60, macro=0.72, micro=0.60,
+                 mask_inset=0.045, mask_feather=0.030, aperture_left=0.0, aperture_right=1.0,
+                 aperture_bottom=0.0, aperture_top=1.0, aperture_feather=0.020):
     """Update only this object's appearance. Geometry and other glass remain unchanged."""
-    values = preset_values(name, intensity, coverage)
+    # Keep existing CLEAN visually intact; QA_TRANSPARENT is truly inert.
+    values = (preset_values('CLEAN', 0.0, 0.0) if name == 'QA_TRANSPARENT'
+              else preset_values(name, intensity, coverage))
     seed_offsets(seed)  # Validate before touching any object material.
     size, edge = validate_shape_params(droplet_scale, frost_edge)
     values['bvt_artifact_droplet_scale'] = size
@@ -32,6 +36,32 @@ def apply_preset(obj, name, intensity, coverage, seed, droplet_scale=1.0, frost_
         raise ValueError('Droplet Relief must be in [0, 1]')
     values['bvt_artifact_refraction'] = float(refraction)
     values['bvt_artifact_relief'] = float(relief)
+    from .hybrid_condensation import validate_hybrid_settings
+    if not isfinite(float(mask_inset)) or not 0.0 <= float(mask_inset) <= 0.25:
+        raise ValueError('Glass Mask Inset must be in [0, 0.25]')
+    if not isfinite(float(mask_feather)) or not 0.001 <= float(mask_feather) <= 0.25:
+        raise ValueError('Mask Feather must be in [0.001, 0.25]')
+    if not isfinite(float(aperture_left)) or not isfinite(float(aperture_right)):
+        raise ValueError('Aperture Left/Right must be finite')
+    if not isfinite(float(aperture_bottom)) or not isfinite(float(aperture_top)):
+        raise ValueError('Aperture Bottom/Top must be finite')
+    if not 0.0 <= float(aperture_left) < float(aperture_right) <= 1.0:
+        raise ValueError('Aperture Left/Right must satisfy 0 <= left < right <= 1')
+    if not 0.0 <= float(aperture_bottom) < float(aperture_top) <= 1.0:
+        raise ValueError('Aperture Bottom/Top must satisfy 0 <= bottom < top <= 1')
+    if not isfinite(float(aperture_feather)) or not 0.001 <= float(aperture_feather) <= 0.25:
+        raise ValueError('Aperture Feather must be in [0.001, 0.25]')
+    validate_hybrid_settings(int(seed), values['bvt_artifact_coverage'], droplet_scale, macro, micro, wetness)
+    values['bvt_hybrid_wetness'] = float(wetness)
+    values['bvt_hybrid_macro'] = float(macro)
+    values['bvt_hybrid_micro'] = float(micro)
+    values['bvt_artifact_mask_inset'] = float(mask_inset)
+    values['bvt_artifact_mask_feather'] = float(mask_feather)
+    values['bvt_artifact_aperture_left'] = float(aperture_left)
+    values['bvt_artifact_aperture_right'] = float(aperture_right)
+    values['bvt_artifact_aperture_bottom'] = float(aperture_bottom)
+    values['bvt_artifact_aperture_top'] = float(aperture_top)
+    values['bvt_artifact_aperture_feather'] = float(aperture_feather)
     # Ensure the target has a usable material before touching any stored properties.
     if obj.type != 'MESH' or obj.get('bvt_role') != 'glass_overlay':
         raise ValueError('Target is not a registered glass mesh')
@@ -67,7 +97,12 @@ class BVTSTUDIO_OT_apply_glass_preset(bpy.types.Operator):
             apply_preset(obj, settings.artifact_preset, settings.artifact_intensity,
                          settings.artifact_coverage, settings.artifact_seed,
                          settings.artifact_droplet_scale, settings.artifact_frost_edge,
-                         settings.artifact_refraction, settings.artifact_relief)
+                         settings.artifact_refraction, settings.artifact_relief,
+                         settings.hybrid_wetness, settings.hybrid_macro, settings.hybrid_micro,
+                         settings.artifact_mask_inset, settings.artifact_mask_feather,
+                         settings.artifact_aperture_left, settings.artifact_aperture_right,
+                         settings.artifact_aperture_bottom, settings.artifact_aperture_top,
+                         settings.artifact_aperture_feather)
             context.view_layer.update()
             self.report({'INFO'}, f'{obj.name}: {settings.artifact_preset}, seed={settings.artifact_seed}')
             return {'FINISHED'}

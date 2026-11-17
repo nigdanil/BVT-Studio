@@ -81,8 +81,8 @@ class TestGlassRealism(unittest.TestCase):
             self.assertIn(field, (ROOT / 'bvt_studio/props.py').read_text())
             self.assertIn(field, (ROOT / 'bvt_studio/annotation.py').read_text())
             self.assertIn(field, PRESETS)
-        self.assertIn('v0.4.0-alpha.3.zip', (ROOT / 'scripts/build_addon.py').read_text())
-        self.assertIn('BUILD_STAGE = "alpha.3"', (ROOT / 'bvt_studio/__init__.py').read_text())
+        self.assertIn('v0.4.0-alpha.4-step4.zip', (ROOT / 'scripts/build_addon.py').read_text())
+        self.assertIn('BUILD_STAGE = "alpha.4-step4"', (ROOT / 'bvt_studio/__init__.py').read_text())
 
     def test_visual_gallery_exports_real_pngs_without_zip(self):
         path = ROOT / 'scripts/blender_glass_visual_gallery.py'

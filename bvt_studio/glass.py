@@ -32,6 +32,26 @@ SHAPE_DEFAULTS = {
                                 'Local photo UV warp inside droplets'),
     'bvt_artifact_relief': (0.80, 0.0, 1.0,
                             'Brightness contrast of droplet rims'),
+    'bvt_hybrid_wetness': (0.60, 0.0, 1.0,
+                           'Broad irregular wet-film strength'),
+    'bvt_hybrid_macro': (0.72, 0.0, 1.0,
+                         'Density of medium and large condensation beads'),
+    'bvt_hybrid_micro': (0.60, 0.0, 1.0,
+                         'Density of small condensation beads'),
+    'bvt_artifact_mask_inset': (0.045, 0.0, 0.25,
+                                'Inset the hybrid effect inward to avoid frame bleed'),
+    'bvt_artifact_mask_feather': (0.030, 0.001, 0.25,
+                                  'Soft edge width for the glass-area mask'),
+    'bvt_artifact_aperture_left': (0.0, 0.0, 0.95,
+                                   'Optional inner aperture min U inside this glass'),
+    'bvt_artifact_aperture_right': (1.0, 0.05, 1.0,
+                                    'Optional inner aperture max U inside this glass'),
+    'bvt_artifact_aperture_bottom': (0.0, 0.0, 0.95,
+                                     'Optional inner aperture min V inside this glass'),
+    'bvt_artifact_aperture_top': (1.0, 0.05, 1.0,
+                                  'Optional inner aperture max V inside this glass'),
+    'bvt_artifact_aperture_feather': (0.020, 0.001, 0.25,
+                                      'Soft edge width for the optional inner aperture mask'),
 }
 
 
@@ -65,8 +85,13 @@ def ensure_uv(obj):
         return
     verts = [v.co for v in mesh.vertices]
     spans = [(max(c[i] for c in verts) - min(c[i] for c in verts)) for i in range(3)]
-    dims = sorted(range(3), key=lambda i: spans[i], reverse=True)[:2]
-    if spans[dims[1]] < 1e-10:
+    # Prefer stable XY orientation on photo-parallel planes. Selecting the
+    # longest axis first transposed tall freezer panels and their PNG masks.
+    if spans[2] < 1e-8 and min(spans[0], spans[1]) > 1e-10:
+        dims = [0, 1]
+    else:
+        dims = sorted(sorted(range(3), key=lambda i: spans[i], reverse=True)[:2])
+    if spans[dims[1]] < 1e-10 or spans[dims[0]] < 1e-10:
         raise RuntimeError('Glass needs a non-degenerate plane mesh')
     mins = [min(c[i] for c in verts) for i in range(3)]
     uv_layer = mesh.uv_layers.new(name='BVT_Glass_UV')
@@ -144,6 +169,9 @@ def configure_glass(obj):
             min=0, max=2147483647, description='Seed for procedural UV patterns')
     except (AttributeError, TypeError, ValueError):
         pass
+    # Fail before clearing the existing material if an enabled packed mask is missing.
+    from .glass_mask import mask_image_for
+    mask_image_for(obj)
     # A single glass object owns its shader and seed. Other glass is unaffected.
     obj['bvt_role'] = 'glass_overlay'
     obj['bvt_surface'] = 'glass'
@@ -408,10 +436,24 @@ def configure_glass(obj):
     output = nodes.new('ShaderNodeOutputMaterial')
     output.location = (2010, 160)
     links.new(mix.outputs[0], output.inputs['Surface'])
-    from .glass_realism import build_realistic_glass
-    build_realistic_glass(obj, nodes, links, mix.outputs[0], output, tex,
-                          offset.outputs['Vector'], droplets_strength.outputs[0],
-                          frost_union.outputs[0], frost_strength.outputs[0])
+    # Step alpha.4: use a structured height/normal atlas for Light/Heavy only.
+    # Other presets retain their validated alpha.3 shader without changes.
+    from .hybrid_condensation import HYBRID_PRESETS, build_hybrid_shader
+    if obj.get('bvt_artifact_preset') in HYBRID_PRESETS:
+        build_hybrid_shader(obj, nodes, links, output, tex)
+    else:
+        from .glass_realism import build_realistic_glass
+        build_realistic_glass(obj, nodes, links, mix.outputs[0], output, tex,
+                              offset.outputs['Vector'], droplets_strength.outputs[0],
+                              frost_union.outputs[0], frost_strength.outputs[0])
+    from .glass_mask import apply_precision_mask, force_transparent_control
+    if obj.get('bvt_artifact_preset') == 'QA_TRANSPARENT':
+        force_transparent_control(nodes, links, output)
+    else:
+        apply_precision_mask(
+            obj, nodes, links, output, tex.outputs['UV'],
+            hybrid=obj.get('bvt_artifact_preset') in HYBRID_PRESETS,
+        )
     if not obj.material_slots:
         obj.data.materials.append(mat)
     else:
@@ -556,6 +598,63 @@ def renumber_glass(scene, objects):
         if mat and mat.get('bvt_studio_glass') and mat.users == 1:
             mat['bvt_owner'] = obj.name
     return len(ordered)
+
+
+def fit_glass_to_source_uv_rect(obj, source, u0, v0, u1, v1,
+                                depth_offset=DEFAULT_GLASS_CAMERA_OFFSET_M):
+    """Place a glass plane over a UV sub-rectangle of the source image plane.
+
+    This is geometry placement, not a shader trick: the glass mesh itself is
+    resized and positioned to the requested source-photo region so the artifact
+    engine can remain physically local to real glass openings.
+    """
+    from .glass_realism import image_uv_bounds
+    if obj is None or obj.type != 'MESH' or source is None or source.type != 'MESH':
+        raise ValueError('Glass and source must be mesh objects')
+    if not (0.0 <= float(u0) < float(u1) <= 1.0 and 0.0 <= float(v0) < float(v1) <= 1.0):
+        raise ValueError('UV rectangle must satisfy 0 <= u0 < u1 <= 1 and 0 <= v0 < v1 <= 1')
+    bounds = image_uv_bounds(source)
+    if bounds is None:
+        raise ValueError('Source image plane must have default affine XY UVs')
+    (xmin, ymin), (width, height) = bounds
+    local_width = width * (float(u1) - float(u0))
+    local_height = height * (float(v1) - float(v0))
+    cx = xmin + width * (float(u0) + float(u1)) * 0.5
+    cy = ymin + height * (float(v0) + float(v1)) * 0.5
+    mesh = obj.data
+    if len(mesh.vertices) != 4:
+        raise ValueError('Glass UV fitting expects a 4-vertex plane mesh')
+    coords = ((-local_width / 2, -local_height / 2, 0.0),
+              ( local_width / 2, -local_height / 2, 0.0),
+              ( local_width / 2,  local_height / 2, 0.0),
+              (-local_width / 2,  local_height / 2, 0.0))
+    for vert, co in zip(mesh.vertices, coords):
+        vert.co = co
+    # A tall pane's original UV layout may have been transposed by the old
+    # longest-axis heuristic. Explicitly map X->U and Y->V during UV fitting.
+    uv_layer = mesh.uv_layers.active or mesh.uv_layers.new(name='BVT_Glass_UV')
+    for poly in mesh.polygons:
+        for loop_index in poly.loop_indices:
+            vid = mesh.loops[loop_index].vertex_index
+            vertex = mesh.vertices[vid].co
+            uv_layer.data[loop_index].uv = (vertex.x / local_width + .5,
+                                            vertex.y / local_height + .5)
+    mesh.update()
+    matrix = source.matrix_world @ Matrix.Translation((cx, cy, 0.0))
+    camera = next((scene.camera for scene in bpy.data.scenes
+                   if scene.objects.get(obj.name) is obj and scene.camera is not None), None)
+    if camera is not None:
+        front = (camera.matrix_world.to_quaternion() @ Vector((0, 0, 1))).normalized()
+    else:
+        front = (source.matrix_world.to_quaternion() @ Vector((0, 0, 1))).normalized()
+    matrix.translation += front * float(depth_offset)
+    obj.matrix_world = matrix
+    obj['bvt_artifact_aperture_left'] = 0.0
+    obj['bvt_artifact_aperture_right'] = 1.0
+    obj['bvt_artifact_aperture_bottom'] = 0.0
+    obj['bvt_artifact_aperture_top'] = 1.0
+    obj['bvt_artifact_aperture_feather'] = max(0.001, min(0.25, obj.get('bvt_artifact_aperture_feather', 0.02)))
+    return obj
 
 
 class BVTSTUDIO_OT_add_glass(bpy.types.Operator):

@@ -41,6 +41,7 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Glass Preset',
         items=[
             ('CLEAN', 'Clean', 'Minimal artifact baseline'),
+            ('QA_TRANSPARENT', 'QA Transparent', 'True no-effect render baseline'),
             ('LIGHT_CONDENSATION', 'Light Condensation', 'Gentle condensed moisture'),
             ('HEAVY_CONDENSATION', 'Heavy Condensation', 'Strong condensation and droplets'),
             ('FROST', 'Frost', 'Patchy cold freezer frost'),
@@ -72,6 +73,54 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
     artifact_relief: FloatProperty(
         name='Droplet Relief', default=0.80, min=0.0, max=1.0,
         description='Contrast of bright and dark droplet rims',
+    )
+    hybrid_wetness: FloatProperty(
+        name='Wetness', default=.60, min=0.0, max=1.0,
+        description='Irregular wet film opacity on Light/Heavy condensation only',
+    )
+    hybrid_macro: FloatProperty(
+        name='Macro Droplets', default=.72, min=0.0, max=1.0,
+        description='Density of medium and large droplets on Light/Heavy only',
+    )
+    hybrid_micro: FloatProperty(
+        name='Micro Droplets', default=.60, min=0.0, max=1.0,
+        description='Density of tiny rounded water beads on Light/Heavy only',
+    )
+    artifact_mask_inset: FloatProperty(
+        name='Glass Mask Inset', default=0.045, min=0.0, max=0.25,
+        precision=3, description='Inset effect inward from the glass plane border to avoid frame bleed',
+    )
+    artifact_mask_feather: FloatProperty(
+        name='Mask Feather', default=0.030, min=0.001, max=0.25,
+        precision=3, description='Soft transition width of the glass-area mask',
+    )
+    artifact_aperture_left: FloatProperty(
+        name='Aperture Left', default=0.0, min=0.0, max=0.95,
+        precision=3, description='Optional inner glass aperture min U for masking frame and mullions',
+    )
+    artifact_aperture_right: FloatProperty(
+        name='Aperture Right', default=1.0, min=0.05, max=1.0,
+        precision=3, description='Optional inner glass aperture max U for masking frame and mullions',
+    )
+    artifact_aperture_bottom: FloatProperty(
+        name='Aperture Bottom', default=0.0, min=0.0, max=0.95,
+        precision=3, description='Optional inner glass aperture min V for masking frame and mullions',
+    )
+    artifact_aperture_top: FloatProperty(
+        name='Aperture Top', default=1.0, min=0.05, max=1.0,
+        precision=3, description='Optional inner glass aperture max V for masking frame and mullions',
+    )
+    artifact_aperture_feather: FloatProperty(
+        name='Aperture Feather', default=0.020, min=0.001, max=0.25,
+        precision=3, description='Soft transition width for the optional inner glass aperture mask',
+    )
+    precision_mask_path: StringProperty(
+        name='PNG Mask', subtype='FILE_PATH', default='',
+        description='Optional black/white/grayscale PNG for selected Glass Target; packed on assignment',
+    )
+    qa_leakage_limit: FloatProperty(
+        name='QA Max Leakage', default=0.0005, min=0.0, max=0.1, precision=5,
+        description='Maximum fraction of tested forbidden pixels allowed to change',
     )
     artifact_seed: IntProperty(
         name='Seed', default=42, min=0, max=2147483647,

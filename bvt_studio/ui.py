@@ -153,7 +153,30 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
         layout.prop(settings, 'artifact_frost_edge', slider=True)
         layout.prop(settings, 'artifact_refraction', slider=True)
         layout.prop(settings, 'artifact_relief', slider=True)
+        layout.label(text='Hybrid Condensation v2.2 (Light / Heavy):', icon='MOD_FLUIDSIM')
+        layout.prop(settings, 'hybrid_wetness', slider=True)
+        layout.prop(settings, 'hybrid_macro', slider=True)
+        layout.prop(settings, 'hybrid_micro', slider=True)
+        layout.prop(settings, 'artifact_mask_inset', slider=True)
+        layout.prop(settings, 'artifact_mask_feather', slider=True)
+        layout.label(text='Optional inner aperture (per glass):', icon='MOD_MASK')
+        layout.prop(settings, 'artifact_aperture_left', slider=True)
+        layout.prop(settings, 'artifact_aperture_right', slider=True)
+        layout.prop(settings, 'artifact_aperture_bottom', slider=True)
+        layout.prop(settings, 'artifact_aperture_top', slider=True)
+        layout.prop(settings, 'artifact_aperture_feather', slider=True)
         layout.prop(settings, 'artifact_seed')
+        layout.separator()
+        layout.label(text='Packed PNG Precision Mask:', icon='MOD_MASK')
+        layout.prop(settings, 'precision_mask_path', text='Mask PNG')
+        layout.operator('bvt_studio.assign_precision_mask', text='Assign PNG Mask (Pack)', icon='IMAGE_DATA')
+        if selected and selected.get('bvt_role') == 'glass_overlay':
+            mask_enabled = bool(selected.get('bvt_glass_mask_enabled', False))
+            layout.label(text='Assigned: ' + str(selected.get('bvt_glass_mask_image', '(none)')))
+            layout.operator('bvt_studio.toggle_precision_mask',
+                            text='Disable PNG Mask' if mask_enabled else 'Enable PNG Mask',
+                            icon='CHECKBOX_HLT' if mask_enabled else 'CHECKBOX_DEHLT')
+        layout.prop(settings, 'qa_leakage_limit')
         layout.operator('bvt_studio.apply_glass_preset',
                         text='Apply Glass Preset', icon='CHECKMARK')
         layout.operator('bvt_studio.refresh_glass_pattern',
@@ -165,7 +188,17 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
                                 ('bvt_artifact_droplet_scale', 'Object Droplet Scale'),
                                 ('bvt_artifact_frost_edge', 'Object Frost Edge'),
                                 ('bvt_artifact_refraction', 'Object Refraction'),
-                                ('bvt_artifact_relief', 'Object Droplet Relief')):
+                                ('bvt_artifact_relief', 'Object Droplet Relief'),
+                                ('bvt_hybrid_wetness', 'Object Wetness'),
+                                ('bvt_hybrid_macro', 'Object Macro Droplets'),
+                                ('bvt_hybrid_micro', 'Object Micro Droplets'),
+                                ('bvt_artifact_mask_inset', 'Object Glass Mask Inset'),
+                                ('bvt_artifact_mask_feather', 'Object Mask Feather'),
+                                ('bvt_artifact_aperture_left', 'Object Aperture Left'),
+                                ('bvt_artifact_aperture_right', 'Object Aperture Right'),
+                                ('bvt_artifact_aperture_bottom', 'Object Aperture Bottom'),
+                                ('bvt_artifact_aperture_top', 'Object Aperture Top'),
+                                ('bvt_artifact_aperture_feather', 'Object Aperture Feather')):
                 if prop in selected:
                     details.prop(selected, f'["{prop}"]', text=title)
             details.label(text='Refresh Pattern after changing Object Seed.', icon='INFO')
