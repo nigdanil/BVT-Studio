@@ -291,13 +291,18 @@ class BVTSTUDIO_OT_validate(bpy.types.Operator):
     bl_description = 'Check projected bboxes, classes and duplicates'
 
     def execute(self, context):
-        boxes, errors, classes = collect_boxes(context.scene)
-        for msg in errors:
-            print('[BVT Studio] Annotation validation:', msg)
-        if errors:
-            self.report({'WARNING'}, f'{len(errors)} issue(s); {len(boxes)} boxes; see Blender console')
+        from .quality_gate import evaluate_quality
+        report, _errors, _boxes, _classes = evaluate_quality(context.scene)
+        if report['errors']:
+            self.report({'WARNING'},
+                        f"Quality Gate: {report['errors']} error(s), "
+                        f"{report['warnings']} warning(s); see sidebar")
+        elif report['warnings']:
+            self.report({'INFO'},
+                        f"Quality Gate: {report['boxes']} boxes, "
+                        f"{report['warnings']} review warning(s)")
         else:
-            self.report({'INFO'}, f'Valid: {len(boxes)} boxes, {len(classes)} classes')
+            self.report({'INFO'}, f"Quality Gate passed: {report['boxes']} boxes")
         return {'FINISHED'}
 
 
@@ -308,11 +313,13 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
 
     def execute(self, context):
         scene = context.scene
-        boxes, errors, classes = collect_boxes(scene)
+        # Always revalidate: never use a possibly stale sidebar report.
+        from .quality_gate import evaluate_quality
+        report, errors, boxes, classes = evaluate_quality(scene)
         if errors:
             for e in errors:
                 print('[BVT Studio] Export blocked:', e)
-            self.report({'ERROR'}, f'{len(errors)} validation issue(s); see Blender console')
+            self.report({'ERROR'}, f'{len(errors)} validation error(s); see Quality Gate panel')
             return {'CANCELLED'}
         if not bpy.data.filepath and scene.bvt_studio.export_dir.startswith('//'):
             self.report({'ERROR'}, 'Save your .blend first, or choose an absolute output folder')

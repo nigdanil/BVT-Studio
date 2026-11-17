@@ -239,3 +239,25 @@ full-transform group locks with geometric plane-depth constraints.
 6. Turn `Annotations - Lock Depth` OFF and ON, inspect modifier-free original
    mesh corners; use **Export Clean Image + YOLO** as the smoke test.
 7. Save/reopen the `.blend` and confirm constraint targets and offsets persist.
+
+
+### v0.3.0-alpha.4 — YOLO Quality Gate
+
+Use **4. YOLO Quality Gate → Validate YOLO Boxes** to populate a structured
+report. **Errors** block export (missing camera, invalid classes, boxes outside
+the image, identical annotations). **Warnings** do not block export: high
+box overlap (IoU >= 0.70) or projected dimensions under 5 pixels. Some
+warnings represent valid crowded products and require manual review.
+
+Click a row and **Select Problem Annotation** to select the corresponding
+Plane when Annotation Edit is enabled. The report is a **snapshot**: rerun
+validation after modifying objects. Export always reruns validation, even if
+the visible report was generated earlier. No rendered imagery or dataset ZIP
+is produced by this feature.
+
+Blender smoke check (from repository root, Git Bash):
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python scripts/blender_quality_gate_smoke.py
+```

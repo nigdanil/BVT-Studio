@@ -25,7 +25,21 @@ class BVTStudioAnnotationItem(bpy.types.PropertyGroup):
     obj: PointerProperty(name='Annotation', type=bpy.types.Object)
 
 
+class BVTStudioQualityItem(bpy.types.PropertyGroup):
+    severity: StringProperty(name='Severity')
+    code: StringProperty(name='Code')
+    message: StringProperty(name='Message')
+    obj: PointerProperty(name='Annotation', type=bpy.types.Object)
+
+
 class BVTStudioSettings(bpy.types.PropertyGroup):
+    quality_items: CollectionProperty(type=BVTStudioQualityItem)
+    quality_index: IntProperty(name='Issue row', default=-1)
+    quality_checked: BoolProperty(name='Quality report available', default=False)
+    quality_box_count: IntProperty(name='Validated boxes', default=0)
+    quality_error_count: IntProperty(name='Validation errors', default=0)
+    quality_warning_count: IntProperty(name='Validation warnings', default=0)
+
     annotation_items: CollectionProperty(type=BVTStudioAnnotationItem)
     annotation_index: IntProperty(name='Annotation row', default=-1,
                                   update=on_annotation_selection_change)
@@ -93,7 +107,7 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name="Output folder", subtype='DIR_PATH', default="//bvt_studio_dataset",
     )
 
-CLASSES = (BVTStudioAnnotationItem, BVTStudioSettings)
+CLASSES = (BVTStudioAnnotationItem, BVTStudioQualityItem, BVTStudioSettings)
 
 
 def register():

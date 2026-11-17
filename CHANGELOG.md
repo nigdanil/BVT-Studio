@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-alpha.4 — YOLO Quality Gate
+
+- Show a structured validation report in the BVT Studio sidebar (blocking errors and review warnings).
+- Select affected annotation objects directly from the report.
+- Warn about small projected boxes and high overlap without blocking clean exports.
+- Recompute validation on every export; keep existing geometry/class error rules blocking.
+- Add dependency-free checks and a Blender 5.2+ headless smoke test.
+
+
 ## 0.3.0-alpha.3 — Annotation Manager
 
 - Add a persistent annotation list with Blender UIList and click-to-select behavior.

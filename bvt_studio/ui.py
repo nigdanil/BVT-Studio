@@ -95,7 +95,6 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
         box.operator('bvt_studio.toggle_preview',
                      text='Render Outlines: ON' if show else 'Render Outlines: OFF',
                      icon='HIDE_OFF' if show else 'HIDE_ON')
-        box.operator('bvt_studio.validate', text='Validate YOLO Boxes', icon='CHECKMARK')
         # List is refreshed by BVT add/register/renumber and manually after
         # external Outliner deletions/renames. It never duplicates scene objects.
         manager = box.box()
@@ -131,8 +130,26 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
                     sub.prop(selected, f'["{key}"]', text=label)
             sub.label(text='Scale/move the Plane over a product.')
 
+        quality = layout.box()
+        quality.label(text='4. YOLO Quality Gate', icon='CHECKMARK')
+        quality.operator('bvt_studio.validate', text='Validate YOLO Boxes', icon='CHECKMARK')
+        if settings.quality_checked:
+            quality.label(text=(f"{settings.quality_box_count} boxes  |  "
+                                f"{settings.quality_error_count} errors  |  "
+                                f"{settings.quality_warning_count} warnings"))
+            if settings.quality_items:
+                quality.template_list('BVTSTUDIO_UL_quality_issues', '', settings,
+                                      'quality_items', settings, 'quality_index', rows=5)
+                quality.operator('bvt_studio.focus_quality_issue',
+                                 text='Select Problem Annotation', icon='RESTRICT_SELECT_OFF')
+            else:
+                quality.label(text='No issues detected', icon='CHECKMARK')
+            quality.label(text='Snapshot: rerun validation after edits.', icon='INFO')
+        else:
+            quality.label(text='Run validation to see errors here.', icon='INFO')
+
         box = layout.box()
-        box.label(text='4. YOLO Export', icon='EXPORT')
+        box.label(text='5. YOLO Export', icon='EXPORT')
         box.prop(settings, 'export_dir', text='Folder')
         box.operator('bvt_studio.export_yolo', text='Export Clean Image + YOLO', icon='FILE_TICK')
         box.label(text='One sample per click; val split is manual.', icon='INFO')
