@@ -1,10 +1,31 @@
 import bpy
 from bpy.props import (
-    PointerProperty, StringProperty, FloatProperty, EnumProperty,
+    PointerProperty, StringProperty, FloatProperty, EnumProperty, BoolProperty,
 )
 
 
+def on_lock_change(self, context):
+    # Deferred import avoids a registration-time circular dependency.
+    from .scene_lock import on_group_settings_changed
+    on_group_settings_changed(self, context)
+
+
 class BVTStudioSettings(bpy.types.PropertyGroup):
+    scene_locks_enabled: BoolProperty(
+        name='Scene protection active', default=False, update=on_lock_change,
+        description='Apply BVT selection and transform locks to this scene',
+    )
+    photo_edit_enable: BoolProperty(
+        name='Photo Edit Enable', default=False, update=on_lock_change)
+    camera_edit_enable: BoolProperty(
+        name='Camera Edit Enable', default=False, update=on_lock_change)
+    light_edit_enable: BoolProperty(
+        name='Light Edit Enable', default=False, update=on_lock_change)
+    glass_edit_enable: BoolProperty(
+        name='Glass Edit Enable', default=True, update=on_lock_change)
+    annotations_edit_enable: BoolProperty(
+        name='Annotations Edit Enable', default=True, update=on_lock_change)
+
     source_object: PointerProperty(
         name="Image Plane", type=bpy.types.Object,
         description="Image plane used for camera fitting and initial annotation placement",

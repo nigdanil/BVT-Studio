@@ -72,6 +72,7 @@ def create_photo_scene(context, image):
     cam = bpy.data.objects.new('BVT_Studio_Camera', cam_data)
     col.objects.link(cam)
     scene.camera = cam
+    cam['bvt_role'] = 'studio_camera'
     scene.bvt_studio.source_object = plane
     scene.bvt_studio.camera_profile = 'ORIGINAL'
     scene.bvt_studio.plane_width = width
@@ -80,6 +81,8 @@ def create_photo_scene(context, image):
     scene.view_settings.view_transform = 'Standard'
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGBA'
+    from .scene_lock import activate_default_scene_locks
+    activate_default_scene_locks(scene)
     return scene
 
 
@@ -106,6 +109,7 @@ def fit_camera_to_source(scene):
         camera = bpy.data.objects.new('BVT_Studio_Camera', camera_data)
         ensure_collection(scene, 'BVT_Studio_Photo').objects.link(camera)
         scene.camera = camera
+        camera['bvt_role'] = 'studio_camera'
     cam_normal = (source.matrix_world.to_quaternion() @ Vector((0, 0, 1))).normalized()
     camera.location = source_centroid(source) + cam_normal * 4.0
     camera.rotation_euler = source.matrix_world.to_euler()
@@ -150,6 +154,25 @@ class BVTSTUDIO_OT_load_photo(bpy.types.Operator):
             return {'CANCELLED'}
 
 
+def choose_source_image_plane(scene, active_object):
+    """Choose a textured photo plane, never mistake a glass/annotation Plane for it.
+
+    An already configured source remains usable when the user happens to have
+    another Plane selected. Return (source_object, used_existing_source).
+    """
+    if (active_object is not None and active_object.type == 'MESH'
+            and scene.objects.get(active_object.name) is active_object
+            and image_from_mesh(active_object) is not None
+            and active_object.get('bvt_role') not in {'annotation', 'glass_overlay'}):
+        return active_object, False
+    current = get_source(scene)
+    if (current is not None and image_from_mesh(current) is not None
+            and current.get('bvt_role') not in {'annotation', 'glass_overlay'}):
+        return current, True
+    raise ValueError(
+        'Select a mesh with an Image Texture material, or import a photo first')
+
+
 class BVTSTUDIO_OT_use_source(bpy.types.Operator):
     bl_idname = 'bvt_studio.use_source'
     bl_label = 'Use Selected as Photo'
@@ -157,13 +180,18 @@ class BVTSTUDIO_OT_use_source(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        obj = context.active_object
-        if obj is None or obj.type != 'MESH' or image_from_mesh(obj) is None:
-            self.report({'ERROR'}, 'Select a mesh with an Image Texture material')
+        try:
+            obj, used_existing = choose_source_image_plane(
+                context.scene, context.active_object)
+        except ValueError as exc:
+            self.report({'ERROR'}, str(exc))
             return {'CANCELLED'}
         context.scene.bvt_studio.source_object = obj
         obj['bvt_role'] = 'planogram_image'
-        self.report({'INFO'}, f'BVT Studio source: {obj.name}')
+        if used_existing:
+            self.report({'INFO'}, f'Keeping existing photo source: {obj.name}')
+        else:
+            self.report({'INFO'}, f'BVT Studio source: {obj.name}')
         return {'FINISHED'}
 
 

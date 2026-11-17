@@ -179,6 +179,10 @@ class BVTSTUDIO_OT_add_annotation(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        settings = context.scene.bvt_studio
+        if settings.scene_locks_enabled and not settings.annotations_edit_enable:
+            self.report({'WARNING'}, 'Enable Annotations Edit before adding a box')
+            return {'CANCELLED'}
         source = get_source(context.scene)
         if source is None:
             self.report({'ERROR'}, 'First set a source Image Plane')
@@ -207,6 +211,8 @@ class BVTSTUDIO_OT_add_annotation(bpy.types.Operator):
         obj.matrix_world = source.matrix_world @ Matrix.Translation((0, 0, signed * 0.03))
         configure_outline(obj, len(scene_annotations(context.scene)) - 1,
                           bool(context.scene.get(PREVIEW_PROP, False)))
+        from .scene_lock import apply_scene_locks
+        apply_scene_locks(context.scene)
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True)
         context.view_layer.objects.active = obj
@@ -227,6 +233,8 @@ class BVTSTUDIO_OT_register_annotations(bpy.types.Operator):
             return {'CANCELLED'}
         for idx, obj in enumerate(objs):
             configure_outline(obj, idx, bool(context.scene.get(PREVIEW_PROP, False)))
+        from .scene_lock import apply_scene_locks
+        apply_scene_locks(context.scene)
         self.report({'INFO'}, f'Configured {len(objs)} annotations')
         return {'FINISHED'}
 

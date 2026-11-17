@@ -1,5 +1,6 @@
 """Blender sidebar panel; no geometry or render business logic."""
 import bpy
+from . import bl_info
 from .common import scene_annotations
 from .annotation import PREVIEW_PROP
 from .glass import scene_glass
@@ -17,19 +18,45 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
         scene = context.scene
         settings = scene.bvt_studio
         selected = context.active_object
+        version = '.'.join(str(v) for v in bl_info['version'])
+        layout.label(text=f'BVT Studio v{version}', icon='INFO')
+
+        box = layout.box()
+        box.label(text='0. Scene Editing / Locks', icon='RESTRICT_SELECT_OFF')
+        box.label(text='Protection: ON' if settings.scene_locks_enabled else 'Protection: OFF',
+                  icon='LOCKED' if settings.scene_locks_enabled else 'UNLOCKED')
+        box.operator('bvt_studio.annotation_lock_mode', text='Lock Scene for Annotation', icon='LOCKED')
+        box.operator('bvt_studio.unlock_scene', text='Unlock Scene', icon='UNLOCKED')
+        fields = (
+            'photo_edit_enable', 'camera_edit_enable', 'light_edit_enable',
+            'glass_edit_enable', 'annotations_edit_enable',
+        )
+        col = box.column(align=True)
+        col.enabled = settings.scene_locks_enabled
+        for key in fields:
+            row = col.row(align=True)
+            row.prop(settings, key)
+            enabled = bool(getattr(settings, key))
+            row.label(text='Editable' if enabled else 'Locked',
+                      icon='UNLOCKED' if enabled else 'LOCKED')
+        box.label(text='Only BVT-managed objects are protected.', icon='INFO')
 
         box = layout.box()
         box.label(text='1. Photo / Scene', icon='IMAGE_DATA')
         box.operator('bvt_studio.load_photo', text='New Scene from Photo', icon='FILE_IMAGE')
-        box.operator('bvt_studio.use_source', text='Use Selected Image Plane', icon='EYEDROPPER')
+        box.operator('bvt_studio.use_source', text='Use Selected / Current Photo', icon='EYEDROPPER')
         box.prop(settings, 'source_object', text='Source')
+        box.label(text='Photo source is retained if a Glass Plane is selected.')
         box.prop(settings, 'camera_profile', text='Frame')
         box.operator('bvt_studio.fit_camera', text='Frame Camera to Photo', icon='CAMERA_DATA')
         box.label(text='Photo stays flat; camera crops/frames it.', icon='INFO')
 
         box = layout.box()
         box.label(text=f'2. Glass / Artifacts ({len(scene_glass(scene))})', icon='MOD_FLUIDSIM')
+        box.operator('bvt_studio.add_glass', text='Add Glass', icon='ADD')
         box.operator('bvt_studio.setup_glass', text='Setup Selected Glass Plane', icon='MATERIAL')
+        box.operator('bvt_studio.setup_selected_glass_batch',
+                     text='Setup Selected Planes (Batch)', icon='MOD_ARRAY')
         box.operator('bvt_studio.organize_glass', text='Register / Setup Glass All', icon='OUTLINER_COLLECTION')
         box.operator('bvt_studio.renumber_glass', text='Renumber Glass 001...N', icon='SORTALPHA')
         if selected and selected.get('bvt_role') == 'glass_overlay':
@@ -42,7 +69,7 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
                 if prop in selected:
                     box.prop(selected, f'["{prop}"]', text=title, slider=True)
         else:
-            box.label(text='Create/select a Plane over glass.', icon='INFO')
+            box.label(text='Click Add Glass, then size/move the Plane.', icon='INFO')
         box.label(text='Stored in BVT_Glass / Glass_p_001...N', icon='OUTLINER_COLLECTION')
 
         box = layout.box()
