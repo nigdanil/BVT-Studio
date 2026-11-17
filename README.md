@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.2
+# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.2-ui.1
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -21,6 +21,21 @@ If the Blender version displays the extension-warning prompt, allow installation
 4. **Annotations:** Click *Add Annotation* and move/resize the rectangular plane over each visible SKU, or use existing manually made `plane_p_001..N` and click *Register / Color All*. A colored **Wireframe modifier** makes the rectangle visible in viewport. Move the **original rectangle mesh**, not its modifier. Edit Class ID / name on the selected annotation. For default category detection, keep all IDs at `0`, class name `ice_cream`.
 5. *Renumber 001...N*, *Validate YOLO Boxes*, and optionally *Render Outlines: ON* to preview colored bounding boxes in F12. For dataset export, outlines will **always** be hidden temporarily.
 6. **Export:** Save the `.blend`, select an output folder, then *Export Clean Image + YOLO*. Each click adds `sample_000001`, `sample_000002`, ... in a dataset structure.
+
+## Collapsible sidebar (v0.4.0-alpha.2-ui.1)
+
+- The **N → BVT Studio** sidebar now uses eight native Blender child panels under the
+  existing **BVT Studio | 2.5D** parent. Click the disclosure arrow to expand/collapse
+  each panel; Blender remembers the state per UI region.
+- **Glass Artifact Engine** starts expanded, while Scene Locks, Layer Depth, Photo / Scene,
+  Glass / Surfaces, YOLO Annotation Manager, YOLO Quality Gate and YOLO Export start closed.
+- Glass creation/manual per-object sliders are under **Glass / Surfaces**; preset/seed/
+  intensity/coverage/shape controls are under **Glass Artifact Engine**. YOLO annotation,
+  quality and export are separate siblings, no longer hidden behind the tall Glass section.
+- No operator identifiers, properties, camera/scene logic, shaders, export formats or
+  existing `.blend` data are changed by this patch.
+- Verify the new UI by expanding each child panel in Blender 5.2.3. CLI smoke:
+  `--background --factory-startup --python scripts/blender_ui_panels_smoke.py`.
 
 ## Multi-scale procedural glass (v0.4.0-alpha.2)
 

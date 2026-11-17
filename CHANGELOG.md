@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0-alpha.2-ui.1 — 2026-11-17
+
+- Replace the very long sidebar with eight native collapsible Blender sub-panels.
+- Keep Glass Artifact Engine expanded by default; move manual Glass and YOLO controls
+  into separate panels without changing any operators or stored scene properties.
+- Add static UI contract tests and a Blender panel-registration smoke test.
+- Update the source-builder output filename; no ZIP is produced by this patch.
+
 ## 0.4.0-alpha.2 — 2026-11-17
 
 - Replace uniform single-scale droplets with seeded, warped multi-scale Voronoi masks

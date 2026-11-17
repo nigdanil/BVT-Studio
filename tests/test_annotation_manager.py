@@ -106,7 +106,7 @@ class TestAnnotationManager(unittest.TestCase):
         settings = (ROOT / 'bvt_studio' / 'props.py').read_text(encoding='utf-8')
         init = (ROOT / 'bvt_studio' / '__init__.py').read_text(encoding='utf-8')
         self.assertIn('annotation_manager, scene_lock', init)
-        self.assertIn("manager.template_list('BVTSTUDIO_UL_annotations'", ui)
+        self.assertIn("layout.template_list('BVTSTUDIO_UL_annotations'", ui)
         for op in ('refresh_annotation_list', 'select_all_annotations',
                    'batch_annotation_class', 'batch_annotation_enabled'):
             self.assertIn('bvt_studio.' + op, ui)
@@ -114,7 +114,7 @@ class TestAnnotationManager(unittest.TestCase):
         self.assertIn('CollectionProperty(type=BVTStudioAnnotationItem)', settings)
         self.assertIn('on_annotation_selection_change', settings)
         self.assertEqual(annotation.count('sync_annotation_list(context.scene'), 3)
-        self.assertRegex(init, r'BUILD_STAGE = "alpha\.\d+"')
+        self.assertRegex(init, r'BUILD_STAGE = "alpha\.\d+(?:-ui\.\d+)?"')
 
 
 if __name__ == '__main__':

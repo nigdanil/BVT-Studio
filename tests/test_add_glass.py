@@ -47,8 +47,8 @@ class TestAddGlass(unittest.TestCase):
 
     def test_ui_button_precedes_setup(self):
         ui = (SOURCE.parent / 'ui.py').read_text(encoding='utf-8')
-        self.assertLess(ui.index("box.operator('bvt_studio.add_glass'"),
-                        ui.index("box.operator('bvt_studio.setup_glass'"))
+        self.assertLess(ui.index("layout.operator('bvt_studio.add_glass'"),
+                        ui.index("layout.operator('bvt_studio.setup_glass'"))
 
 
 if __name__ == '__main__':
