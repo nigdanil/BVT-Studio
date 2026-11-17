@@ -57,6 +57,14 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Coverage', default=0.30, min=0.0, max=1.0,
         description='Relative droplet density; controlled independently of strength',
     )
+    artifact_droplet_scale: FloatProperty(
+        name='Droplet Scale', default=1.0, min=0.5, max=2.0,
+        description='Higher values produce smaller and more numerous droplets',
+    )
+    artifact_frost_edge: FloatProperty(
+        name='Frost Edge', default=0.35, min=0.0, max=1.0,
+        description='Additional irregular frost near the perimeter of this glass',
+    )
     artifact_seed: IntProperty(
         name='Seed', default=42, min=0, max=2147483647,
         description='Deterministic microstructure seed for the selected glass plane',

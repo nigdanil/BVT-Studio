@@ -70,6 +70,8 @@ with tempfile.TemporaryDirectory(prefix='bvt_studio_v04_glass_') as temp:
     settings.artifact_intensity = .75
     settings.artifact_coverage = .37
     settings.artifact_seed = 72
+    settings.artifact_droplet_scale = 1.35
+    settings.artifact_frost_edge = .62
     check(bpy.ops.bvt_studio.apply_glass_preset() == {'FINISHED'},
           'Apply Preset failed')
     check(first['bvt_glass_droplets'] > 0, 'Droplet property missing')
@@ -77,6 +79,28 @@ with tempfile.TemporaryDirectory(prefix='bvt_studio_v04_glass_') as temp:
     check(first['bvt_artifact_seed'] == 72, 'Seed not stored')
     check(first['bvt_artifact_preset'] == 'HEAVY_CONDENSATION', 'Preset ID missing')
     nodes = first.active_material.node_tree.nodes
+    check(abs(first['bvt_artifact_droplet_scale'] - 1.35) < 1e-6, 'Droplet Scale not stored')
+    check(abs(first['bvt_artifact_frost_edge'] - .62) < 1e-6, 'Frost Edge not stored')
+    for name in ('BVT_Droplets_Voronoi', 'BVT_Droplets_Voronoi_Fine',
+                 'BVT_Droplets_Voronoi_Large', 'BVT_Droplets_Warp_Noise',
+                 'BVT_Droplets_Large_Gate', 'BVT_Frost_Islands',
+                 'BVT_Frost_Crystals', 'BVT_Frost_Edge_Mask'):
+        check(nodes.get(name) is not None, f'Multi-scale node missing: {name}')
+    # Validate that glass-specific controls drive all three scales and the edge mask.
+    for suffix in ('', '_Fine', '_Large'):
+        vor = nodes['BVT_Droplets_Voronoi' + suffix]
+        check(vor.inputs['Scale'].is_linked, f'Unlinked scale for {suffix}')
+        scale_driver = next(link.from_node for link in first.active_material.node_tree.links
+                            if link.to_socket == vor.inputs['Scale'])
+        drivers = first.active_material.node_tree.animation_data.drivers
+        scale_path = scale_driver.inputs[0].path_from_id('default_value')
+        check(any(fc.data_path == scale_path and
+                  any(target.data_path == '["bvt_artifact_droplet_scale"]'
+                      for var in fc.driver.variables for target in var.targets)
+                  for fc in drivers),
+              f'Droplet Scale driver missing: {suffix}')
+    edge = nodes['BVT_Frost_Edge_Mask']
+    check(edge.outputs['Result'].is_linked, 'Frost edge mask is disconnected')
     check(nodes.get('BVT_Droplets_Voronoi') is not None, 'Droplet Voronoi node missing')
     offset = active_seed_offset(first)
     # Blender vector sockets store float32, while Python seed_offsets uses

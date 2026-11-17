@@ -92,14 +92,19 @@ class BVTSTUDIO_PT_main(bpy.types.Panel):
         artifacts.prop(settings, 'artifact_preset', text='Preset')
         artifacts.prop(settings, 'artifact_intensity', slider=True)
         artifacts.prop(settings, 'artifact_coverage', slider=True)
+        artifacts.prop(settings, 'artifact_droplet_scale', slider=True)
+        artifacts.prop(settings, 'artifact_frost_edge', slider=True)
         artifacts.prop(settings, 'artifact_seed')
         artifacts.operator('bvt_studio.apply_glass_preset',
                            text='Apply Glass Preset', icon='CHECKMARK')
         artifacts.operator('bvt_studio.refresh_glass_pattern',
                            text='Refresh Glass Pattern', icon='FILE_REFRESH')
         if selected and selected.get('bvt_role') == 'glass_overlay':
-            if 'bvt_artifact_seed' in selected:
-                artifacts.prop(selected, '["bvt_artifact_seed"]', text='Object Seed')
+            for prop, title in (('bvt_artifact_seed', 'Object Seed'),
+                                ('bvt_artifact_droplet_scale', 'Object Droplet Scale'),
+                                ('bvt_artifact_frost_edge', 'Object Frost Edge')):
+                if prop in selected:
+                    artifacts.prop(selected, f'["{prop}"]', text=title)
             artifacts.label(text='Refresh Pattern after changing Object Seed.', icon='INFO')
         box.label(text='Stored in BVT_Glass / Glass_p_001...N', icon='OUTLINER_COLLECTION')
 

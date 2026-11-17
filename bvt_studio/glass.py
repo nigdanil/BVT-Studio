@@ -21,6 +21,15 @@ DEFAULTS = {
     'bvt_artifact_coverage': (0.200, 'Area-density control for procedural artifacts'),
 }
 
+# Independent, per-surface shape controls. Existing .blend files receive defaults
+# when their glass material is next refreshed, without changing transforms.
+SHAPE_DEFAULTS = {
+    'bvt_artifact_droplet_scale': (1.0, 0.5, 2.0,
+                                    'Scale of the three droplet size bands'),
+    'bvt_artifact_frost_edge': (0.35, 0.0, 1.0,
+                                 'Additional frost near the glass perimeter'),
+}
+
 
 def math_node(nodes, op, loc, label, val=None):
     node = nodes.new('ShaderNodeMath')
@@ -113,6 +122,15 @@ def configure_glass(obj):
                 description=description, precision=3)
         except (AttributeError, TypeError, ValueError):
             pass
+    for key, (initial, low, high, description) in SHAPE_DEFAULTS.items():
+        if key not in obj:
+            obj[key] = initial
+        try:
+            obj.id_properties_ui(key).update(
+                min=low, max=high, soft_min=low, soft_max=high,
+                description=description, precision=3)
+        except (AttributeError, TypeError, ValueError):
+            pass
     if 'bvt_artifact_seed' not in obj:
         obj['bvt_artifact_seed'] = 0
     if 'bvt_artifact_preset' not in obj:
@@ -166,10 +184,10 @@ def configure_glass(obj):
     haze_strength = math_node(nodes, 'MULTIPLY', (300, -410), 'Haze amount')
     links.new(haze, haze_strength.inputs[0])
     driver_socket(haze_strength.inputs[1], obj, 'bvt_glass_haze')
-    frost = noise_alpha(nodes, links, tex.outputs['UV'], 7, .56, .79, -770)
-    frost_strength = math_node(nodes, 'MULTIPLY', (300, -770), 'Frost amount')
-    links.new(frost, frost_strength.inputs[0])
-    driver_socket(frost_strength.inputs[1], obj, 'bvt_glass_frost')
+    # Both frost and droplets share the same seeded reference UV coordinates.
+    # The broad frost islands are broken up by a finer, crystalline noise;
+    # an optional edge mask models cold buildup near the refrigerator frame.
+    # No displacement or refraction is applied to source image geometry.
 
     # Seed changes the microstructure without moving the glass, camera or YOLO.
     # Coverage is live via object driver; seed is rebuilt using Refresh Pattern.
@@ -181,29 +199,152 @@ def configure_glass(obj):
     offset.inputs[1].default_value = seed_offsets(obj.get('bvt_artifact_seed', 0))
     links.new(tex.outputs['UV'], offset.inputs[0])
 
-    voronoi = nodes.new('ShaderNodeTexVoronoi')
-    voronoi.name = 'BVT_Droplets_Voronoi'
-    voronoi.location = (-500, -1330)
-    voronoi.inputs['Scale'].default_value = 37.0
-    links.new(offset.outputs['Vector'], voronoi.inputs['Vector'])
+    frost_islands = nodes.new('ShaderNodeTexNoise')
+    frost_islands.name = 'BVT_Frost_Islands'
+    frost_islands.location = (-580, -730)
+    frost_islands.inputs['Scale'].default_value = 4.7
+    frost_islands.inputs['Detail'].default_value = 3.0
+    links.new(offset.outputs['Vector'], frost_islands.inputs['Vector'])
+    frost_coarse = nodes.new('ShaderNodeMapRange')
+    frost_coarse.name = 'BVT_Frost_Islands_Mask'
+    frost_coarse.location = (-340, -700)
+    frost_coarse.clamp = True
+    frost_coarse.interpolation_type = 'SMOOTHSTEP'
+    frost_coarse.inputs['From Min'].default_value = .49
+    frost_coarse.inputs['From Max'].default_value = .72
+    links.new(frost_islands.outputs['Fac'], frost_coarse.inputs['Value'])
 
-    coverage_mul = math_node(nodes, 'MULTIPLY', (-490, -1560), 'Coverage to droplet radius', .18)
+    frost_crystals = nodes.new('ShaderNodeTexNoise')
+    frost_crystals.name = 'BVT_Frost_Crystals'
+    frost_crystals.location = (-580, -940)
+    frost_crystals.inputs['Scale'].default_value = 59.0
+    frost_crystals.inputs['Detail'].default_value = 3.0
+    links.new(offset.outputs['Vector'], frost_crystals.inputs['Vector'])
+    crystals_mask = nodes.new('ShaderNodeMapRange')
+    crystals_mask.name = 'BVT_Frost_Crystals_Mask'
+    crystals_mask.location = (-330, -970)
+    crystals_mask.clamp = True
+    crystals_mask.interpolation_type = 'SMOOTHSTEP'
+    crystals_mask.inputs['From Min'].default_value = .30
+    crystals_mask.inputs['From Max'].default_value = .72
+    links.new(frost_crystals.outputs['Fac'], crystals_mask.inputs['Value'])
+    island_detail = math_node(nodes, 'MULTIPLY', (-75, -770), 'Crystalline frost islands')
+    links.new(frost_coarse.outputs['Result'], island_detail.inputs[0])
+    links.new(crystals_mask.outputs['Result'], island_detail.inputs[1])
+
+    # UV distance to center: stronger buildup at perimeter, even when photo is
+    # arbitrarily rotated in world space. No global-Z dependence.
+    frost_distance = nodes.new('ShaderNodeVectorMath')
+    frost_distance.name = 'BVT_Frost_Edge_Distance'
+    frost_distance.operation = 'DISTANCE'
+    frost_distance.location = (-550, -1110)
+    frost_distance.inputs[1].default_value = (.5, .5, 0.0)
+    links.new(tex.outputs['UV'], frost_distance.inputs[0])
+    frost_perimeter = nodes.new('ShaderNodeMapRange')
+    frost_perimeter.name = 'BVT_Frost_Edge_Mask'
+    frost_perimeter.location = (-315, -1120)
+    frost_perimeter.interpolation_type = 'SMOOTHSTEP'
+    frost_perimeter.clamp = True
+    frost_perimeter.inputs['From Min'].default_value = .36
+    frost_perimeter.inputs['From Max'].default_value = .69
+    links.new(frost_distance.outputs['Value'], frost_perimeter.inputs['Value'])
+    frost_edge_weight = math_node(nodes, 'MULTIPLY', (-60, -1060), 'Frost edge bias')
+    links.new(frost_perimeter.outputs['Result'], frost_edge_weight.inputs[0])
+    driver_socket(frost_edge_weight.inputs[1], obj, 'bvt_artifact_frost_edge')
+    frost_union = math_node(nodes, 'MAXIMUM', (125, -780), 'Frost islands and edge')
+    links.new(island_detail.outputs[0], frost_union.inputs[0])
+    links.new(frost_edge_weight.outputs[0], frost_union.inputs[1])
+    frost_strength = math_node(nodes, 'MULTIPLY', (300, -770), 'Frost amount')
+    links.new(frost_union.outputs[0], frost_strength.inputs[0])
+    driver_socket(frost_strength.inputs[1], obj, 'bvt_glass_frost')
+
+    # Warp repeated Voronoi cells with a seeded, low-amplitude noise so drops
+    # do not sit in a perfectly regular tessellation. Three scales represent
+    # rare larger beads, medium drops and fine condensation specks.
+    warp_noise = nodes.new('ShaderNodeTexNoise')
+    warp_noise.name = 'BVT_Droplets_Warp_Noise'
+    warp_noise.location = (-650, -1470)
+    warp_noise.inputs['Scale'].default_value = 11.0
+    warp_noise.inputs['Detail'].default_value = 3.0
+    links.new(offset.outputs['Vector'], warp_noise.inputs['Vector'])
+    warp_strength = nodes.new('ShaderNodeVectorMath')
+    warp_strength.name = 'BVT_Droplets_Warp_Strength'
+    warp_strength.operation = 'MULTIPLY'
+    warp_strength.location = (-420, -1470)
+    warp_strength.inputs[1].default_value = (.025, .025, .025)
+    links.new(warp_noise.outputs['Color'], warp_strength.inputs[0])
+    warped_uv = nodes.new('ShaderNodeVectorMath')
+    warped_uv.name = 'BVT_Droplets_Warped_UV'
+    warped_uv.operation = 'ADD'
+    warped_uv.location = (-230, -1440)
+    links.new(offset.outputs['Vector'], warped_uv.inputs[0])
+    links.new(warp_strength.outputs['Vector'], warped_uv.inputs[1])
+
+    # Helper builds an independent Voronoi ring with one live size driver.
+    def droplet_ring(suffix, density, weight, y):
+        scale = math_node(nodes, 'MULTIPLY', (-700, y - 130),
+                          'Drop scale ' + suffix, density)
+        driver_socket(scale.inputs[0], obj, 'bvt_artifact_droplet_scale')
+        v = nodes.new('ShaderNodeTexVoronoi')
+        v.name = 'BVT_Droplets_Voronoi' + suffix
+        v.location = (-460, y)
+        links.new(warped_uv.outputs['Vector'], v.inputs['Vector'])
+        links.new(scale.outputs[0], v.inputs['Scale'])
+        r = math_node(nodes, 'ADD', (-280, y - 185),
+                      'Droplet radius ' + suffix, .020)
+        links.new(coverage_mul.outputs[0], r.inputs[0])
+        r_inner = math_node(nodes, 'MULTIPLY', (-90, y - 185),
+                            'Droplet core ' + suffix, .78)
+        links.new(r.outputs[0], r_inner.inputs[0])
+        mask = nodes.new('ShaderNodeMapRange')
+        mask.name = 'BVT_Droplets_Mask' + suffix
+        mask.location = (100, y)
+        mask.clamp = True
+        mask.interpolation_type = 'SMOOTHSTEP'
+        mask.inputs['To Min'].default_value = 1.0
+        mask.inputs['To Max'].default_value = 0.0
+        links.new(v.outputs['Distance'], mask.inputs['Value'])
+        links.new(r_inner.outputs[0], mask.inputs['From Min'])
+        links.new(r.outputs[0], mask.inputs['From Max'])
+        weighted = math_node(nodes, 'MULTIPLY', (325, y),
+                             'Droplet weight ' + suffix, weight)
+        links.new(mask.outputs['Result'], weighted.inputs[0])
+        return weighted.outputs[0]
+
+    # All three sizes are driven by bvt_artifact_coverage and droplet_scale.
+    # The large ring is masked to avoid a grid of identical large beads.
+    coverage_mul = math_node(nodes, 'MULTIPLY', (-720, -1650),
+                             'Coverage to droplet radius', .18)
     driver_socket(coverage_mul.inputs[0], obj, 'bvt_artifact_coverage')
-    radius = math_node(nodes, 'ADD', (-280, -1550), 'Droplet radius', .02)
-    links.new(coverage_mul.outputs[0], radius.inputs[0])
-    radius_inner = math_node(nodes, 'MULTIPLY', (-100, -1530), 'Droplet core', .80)
-    links.new(radius.outputs[0], radius_inner.inputs[0])
-    drop_mask = nodes.new('ShaderNodeMapRange')
-    drop_mask.name = 'BVT_Droplets_Mask'
-    drop_mask.location = (120, -1280)
-    drop_mask.clamp = True
-    drop_mask.inputs['To Min'].default_value = 1.0
-    drop_mask.inputs['To Max'].default_value = 0.0
-    links.new(voronoi.outputs['Distance'], drop_mask.inputs['Value'])
-    links.new(radius_inner.outputs[0], drop_mask.inputs['From Min'])
-    links.new(radius.outputs[0], drop_mask.inputs['From Max'])
-    droplets_strength = math_node(nodes, 'MULTIPLY', (380, -1280), 'Micro-droplets strength')
-    links.new(drop_mask.outputs['Result'], droplets_strength.inputs[0])
+    medium = droplet_ring('', 37.0, .55, -1570)
+    fine = droplet_ring('_Fine', 105.0, .28, -2070)
+    large = droplet_ring('_Large', 14.0, .78, -2550)
+
+    large_gate_noise = nodes.new('ShaderNodeTexNoise')
+    large_gate_noise.name = 'BVT_Droplets_Large_Gate_Noise'
+    large_gate_noise.location = (-450, -2970)
+    large_gate_noise.inputs['Scale'].default_value = 5.2
+    links.new(offset.outputs['Vector'], large_gate_noise.inputs['Vector'])
+    large_gate = nodes.new('ShaderNodeMapRange')
+    large_gate.name = 'BVT_Droplets_Large_Gate'
+    large_gate.location = (-210, -2970)
+    large_gate.clamp = True
+    large_gate.interpolation_type = 'SMOOTHSTEP'
+    large_gate.inputs['From Min'].default_value = .52
+    large_gate.inputs['From Max'].default_value = .72
+    links.new(large_gate_noise.outputs['Fac'], large_gate.inputs['Value'])
+    sparse_large = math_node(nodes, 'MULTIPLY', (510, -2530), 'Sparse large drops')
+    links.new(large, sparse_large.inputs[0])
+    links.new(large_gate.outputs['Result'], sparse_large.inputs[1])
+    drops_medium_fine = math_node(nodes, 'ADD', (650, -1650), 'Drops medium + fine')
+    links.new(medium, drops_medium_fine.inputs[0])
+    links.new(fine, drops_medium_fine.inputs[1])
+    drops_total = math_node(nodes, 'ADD', (810, -1660), 'Three droplet sizes')
+    links.new(drops_medium_fine.outputs[0], drops_total.inputs[0])
+    links.new(sparse_large.outputs[0], drops_total.inputs[1])
+    droplets_strength = math_node(nodes, 'MULTIPLY', (960, -1660),
+                                  'Micro-droplets strength')
+    links.new(drops_total.outputs[0], droplets_strength.inputs[0])
     driver_socket(droplets_strength.inputs[1], obj, 'bvt_glass_droplets')
 
     dirt_noise = nodes.new('ShaderNodeTexNoise')

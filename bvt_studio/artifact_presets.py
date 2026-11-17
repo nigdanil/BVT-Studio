@@ -1,6 +1,6 @@
 """Per-glass, non-destructive procedural presets; no mesh transform changes."""
 import bpy
-from .artifact_config import PRESETS, preset_values, seed_offsets
+from .artifact_config import PRESETS, preset_values, seed_offsets, validate_shape_params
 from .glass import configure_glass
 
 
@@ -17,10 +17,13 @@ def resolve_glass(scene, settings, active):
     return target
 
 
-def apply_preset(obj, name, intensity, coverage, seed):
+def apply_preset(obj, name, intensity, coverage, seed, droplet_scale=1.0, frost_edge=0.35):
     """Update only this object's appearance. Geometry and other glass remain unchanged."""
     values = preset_values(name, intensity, coverage)
     seed_offsets(seed)  # Validate before touching any object material.
+    size, edge = validate_shape_params(droplet_scale, frost_edge)
+    values['bvt_artifact_droplet_scale'] = size
+    values['bvt_artifact_frost_edge'] = edge
     # Ensure the target has a usable material before touching any stored properties.
     if obj.type != 'MESH' or obj.get('bvt_role') != 'glass_overlay':
         raise ValueError('Target is not a registered glass mesh')
@@ -54,7 +57,8 @@ class BVTSTUDIO_OT_apply_glass_preset(bpy.types.Operator):
         try:
             obj = resolve_glass(context.scene, settings, context.active_object)
             apply_preset(obj, settings.artifact_preset, settings.artifact_intensity,
-                         settings.artifact_coverage, settings.artifact_seed)
+                         settings.artifact_coverage, settings.artifact_seed,
+                         settings.artifact_droplet_scale, settings.artifact_frost_edge)
             context.view_layer.update()
             self.report({'INFO'}, f'{obj.name}: {settings.artifact_preset}, seed={settings.artifact_seed}')
             return {'FINISHED'}

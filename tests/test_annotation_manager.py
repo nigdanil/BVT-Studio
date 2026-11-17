@@ -114,7 +114,7 @@ class TestAnnotationManager(unittest.TestCase):
         self.assertIn('CollectionProperty(type=BVTStudioAnnotationItem)', settings)
         self.assertIn('on_annotation_selection_change', settings)
         self.assertEqual(annotation.count('sync_annotation_list(context.scene'), 3)
-        self.assertIn('BUILD_STAGE = "alpha.1"', init)
+        self.assertRegex(init, r'BUILD_STAGE = "alpha\.\d+"')
 
 
 if __name__ == '__main__':

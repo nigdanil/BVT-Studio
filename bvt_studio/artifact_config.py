@@ -53,3 +53,13 @@ def seed_offsets(seed):
     return (round(rng.uniform(7.0, 107.0), 6),
             round(rng.uniform(7.0, 107.0), 6),
             round(rng.uniform(7.0, 107.0), 6))
+
+
+def validate_shape_params(droplet_scale, frost_edge):
+    """Validate per-glass procedural shape settings without Blender dependencies."""
+    import math
+    if not math.isfinite(float(droplet_scale)) or not 0.5 <= float(droplet_scale) <= 2.0:
+        raise ValueError('Droplet Scale must be in [0.5, 2.0]')
+    if not math.isfinite(float(frost_edge)) or not 0.0 <= float(frost_edge) <= 1.0:
+        raise ValueError('Frost Edge must be in [0, 1]')
+    return (round(float(droplet_scale), 6), round(float(frost_edge), 6))

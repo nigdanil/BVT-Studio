@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0-alpha.2 — 2026-11-17
+
+- Replace uniform single-scale droplets with seeded, warped multi-scale Voronoi masks
+  (large sparse beads, medium droplets, fine condensation).
+- Replace single-scale frost with seeded islands, fine crystalline variation and
+  adjustable UV-perimeter buildup; photo-relative depth and YOLO are untouched.
+- Add per-glass Droplet Scale and Frost Edge controls, manifest fields, and tests.
+- Preserve existing object presets and independent glass materials. No ZIP produced.
+
 ## 0.4.0-alpha.1 — 2026-11-17
 
 - Introduce isolated, deterministic Glass Artifact Presets per `Glass_p_*` surface.
