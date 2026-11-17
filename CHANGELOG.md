@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0-alpha.6 — 2026-11-17
+
+- Add real Blender end-to-end integration smoke test covering photo import, glass,
+  photo-relative depth, lock mode, annotations, quality gate, and YOLO export.
+- Document stable-release manual acceptance checklist in `docs/QA_V03.md`.
+- No changes to data contracts, no dataset ZIP or add-on archive produced.
+
 ## 0.3.0-alpha.5 — YOLO Preview / Portable Export
 
 - Export a browser-viewable SVG bounding-box preview aligned with the actual YOLO TXT and clean PNG.

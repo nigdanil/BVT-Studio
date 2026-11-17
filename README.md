@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.3.0-alpha.5
+# BVT Studio — 2.5D Dataset Builder v0.3.0-alpha.6
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -76,6 +76,24 @@ Blender headless export test from the repository root:
   --background --factory-startup --python scripts/blender_export_preview_smoke.py
 ```
 
+
+## v0.3 integration QA (alpha.6)
+
+Run the end-to-end test in real Blender 5.2.3:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python scripts/blender_v03_e2e_smoke.py
+```
+
+It exercises photo scene import, default protection, a tilted photo, two
+glass overlays and two annotations, Annotation Manager classes, depth offsets,
+Quality Gate, and a full PNG/TXT/YAML/SVG/manifest export. All output is
+created under an automatically deleted temporary directory. No ZIP is built.
+
+See [docs/QA_V03.md](docs/QA_V03.md) for the manual Blender GUI release gate.
+The v0.3 release is **not** considered stable until those checks pass.
+
 ## Scene collections and naming
 
 ```text
@@ -104,7 +122,7 @@ python scripts/build_addon.py
 python -m unittest discover -s tests -v
 ```
 
-The generated **legacy Blender add-on archive** is `dist/BVT_Studio_Blender_Addon_v0.3.0-alpha.5.zip`. It has the `bvt_studio/` Python package at ZIP root, which is the same structure that worked in Blender 5.2.3 for v0.1. This is not a Blender Extensions platform manifest package.
+The generated **legacy Blender add-on archive** is `dist/BVT_Studio_Blender_Addon_v0.3.0-alpha.6.zip`. It has the `bvt_studio/` Python package at ZIP root, which is the same structure that worked in Blender 5.2.3 for v0.1. This is not a Blender Extensions platform manifest package.
 
 See [docs/PUBLISHING.md](docs/PUBLISHING.md) for GitHub initialization and release upload.
 
