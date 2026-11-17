@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0-alpha.1 — 2026-11-17
+
+- Introduce isolated, deterministic Glass Artifact Presets per `Glass_p_*` surface.
+- Extend the glass shader with seeded micro-droplet and dirt masks; keep existing reflections, haze and frost.
+- Add target selection, intensity, coverage, seed, Apply Preset, and Refresh Pattern to UI.
+- Export glass preset, seed and effect parameters in the JSON manifest.
+- Add dependency-free unit tests and Blender 5.2+ headless glass smoke test.
+- No add-on ZIP produced; build stays under maintainer control.
+
 ## 0.3.0-alpha.6 — 2026-11-17
 
 - Add real Blender end-to-end integration smoke test covering photo import, glass,

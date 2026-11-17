@@ -6,6 +6,7 @@ import bpy
 import re
 import uuid
 from mathutils import Matrix, Vector
+from .artifact_config import seed_offsets
 from .common import (
     make_material_transparent, ensure_collection, get_source, image_from_mesh,
 )
@@ -15,6 +16,9 @@ DEFAULTS = {
     'bvt_glass_tint': (0.012, 'Weak cool glass tint'),
     'bvt_glass_haze': (0.012, 'Glass haze and smudges'),
     'bvt_glass_frost': (0.000, 'Patchy freezer frost'),
+    'bvt_glass_droplets': (0.000, 'Seeded micro-droplet highlights'),
+    'bvt_glass_dirt': (0.000, 'Seeded uneven dirt and stains'),
+    'bvt_artifact_coverage': (0.200, 'Area-density control for procedural artifacts'),
 }
 
 
@@ -109,6 +113,16 @@ def configure_glass(obj):
                 description=description, precision=3)
         except (AttributeError, TypeError, ValueError):
             pass
+    if 'bvt_artifact_seed' not in obj:
+        obj['bvt_artifact_seed'] = 0
+    if 'bvt_artifact_preset' not in obj:
+        obj['bvt_artifact_preset'] = 'CUSTOM'
+    try:
+        obj.id_properties_ui('bvt_artifact_seed').update(
+            min=0, max=2147483647, description='Seed for procedural UV patterns')
+    except (AttributeError, TypeError, ValueError):
+        pass
+    # A single glass object owns its shader and seed. Other glass is unaffected.
     obj['bvt_role'] = 'glass_overlay'
     obj['bvt_surface'] = 'glass'
     obj['bvt_studio_glass_version'] = '0.2'
@@ -157,12 +171,72 @@ def configure_glass(obj):
     links.new(frost, frost_strength.inputs[0])
     driver_socket(frost_strength.inputs[1], obj, 'bvt_glass_frost')
 
+    # Seed changes the microstructure without moving the glass, camera or YOLO.
+    # Coverage is live via object driver; seed is rebuilt using Refresh Pattern.
+    offset = nodes.new('ShaderNodeVectorMath')
+    offset.name = 'BVT_Artifact_Seed_Offset'
+    offset.label = 'Stable seed offset'
+    offset.operation = 'ADD'
+    offset.location = (-750, -1330)
+    offset.inputs[1].default_value = seed_offsets(obj.get('bvt_artifact_seed', 0))
+    links.new(tex.outputs['UV'], offset.inputs[0])
+
+    voronoi = nodes.new('ShaderNodeTexVoronoi')
+    voronoi.name = 'BVT_Droplets_Voronoi'
+    voronoi.location = (-500, -1330)
+    voronoi.inputs['Scale'].default_value = 37.0
+    links.new(offset.outputs['Vector'], voronoi.inputs['Vector'])
+
+    coverage_mul = math_node(nodes, 'MULTIPLY', (-490, -1560), 'Coverage to droplet radius', .18)
+    driver_socket(coverage_mul.inputs[0], obj, 'bvt_artifact_coverage')
+    radius = math_node(nodes, 'ADD', (-280, -1550), 'Droplet radius', .02)
+    links.new(coverage_mul.outputs[0], radius.inputs[0])
+    radius_inner = math_node(nodes, 'MULTIPLY', (-100, -1530), 'Droplet core', .80)
+    links.new(radius.outputs[0], radius_inner.inputs[0])
+    drop_mask = nodes.new('ShaderNodeMapRange')
+    drop_mask.name = 'BVT_Droplets_Mask'
+    drop_mask.location = (120, -1280)
+    drop_mask.clamp = True
+    drop_mask.inputs['To Min'].default_value = 1.0
+    drop_mask.inputs['To Max'].default_value = 0.0
+    links.new(voronoi.outputs['Distance'], drop_mask.inputs['Value'])
+    links.new(radius_inner.outputs[0], drop_mask.inputs['From Min'])
+    links.new(radius.outputs[0], drop_mask.inputs['From Max'])
+    droplets_strength = math_node(nodes, 'MULTIPLY', (380, -1280), 'Micro-droplets strength')
+    links.new(drop_mask.outputs['Result'], droplets_strength.inputs[0])
+    driver_socket(droplets_strength.inputs[1], obj, 'bvt_glass_droplets')
+
+    dirt_noise = nodes.new('ShaderNodeTexNoise')
+    dirt_noise.name = 'BVT_Dirt_Noise'
+    dirt_noise.location = (-500, -1850)
+    dirt_noise.inputs['Scale'].default_value = 9.0
+    dirt_noise.inputs['Detail'].default_value = 3.0
+    links.new(offset.outputs['Vector'], dirt_noise.inputs['Vector'])
+    dirt_mask = nodes.new('ShaderNodeMapRange')
+    dirt_mask.name = 'BVT_Dirt_Mask'
+    dirt_mask.location = (-240, -1800)
+    dirt_mask.clamp = True
+    dirt_mask.inputs['From Min'].default_value = 0.55
+    dirt_mask.inputs['From Max'].default_value = 0.80
+    links.new(dirt_noise.outputs['Fac'], dirt_mask.inputs['Value'])
+    dirt_strength = math_node(nodes, 'MULTIPLY', (80, -1850), 'Dirt strength')
+    links.new(dirt_mask.outputs['Result'], dirt_strength.inputs[0])
+    driver_socket(dirt_strength.inputs[1], obj, 'bvt_glass_dirt')
+
+    artifact_sum = math_node(nodes, 'ADD', (590, -1420), 'Micro droplets + dirt')
+    links.new(droplets_strength.outputs[0], artifact_sum.inputs[0])
+    links.new(dirt_strength.outputs[0], artifact_sum.inputs[1])
+
     sum1 = math_node(nodes, 'ADD', (990, 235), 'Glass reflections + haze')
     links.new(strength.outputs[0], sum1.inputs[0])
     links.new(haze_strength.outputs[0], sum1.inputs[1])
     sum2 = math_node(nodes, 'ADD', (1180, 235), 'Glass + frost')
     links.new(sum1.outputs[0], sum2.inputs[0])
-    links.new(frost_strength.outputs[0], sum2.inputs[1])
+    # Seeded microstructure is composed with legacy effects, not baked into photo.
+    frost_plus_artifacts = math_node(nodes, 'ADD', (800, -230), 'Frost + artifacts')
+    links.new(frost_strength.outputs[0], frost_plus_artifacts.inputs[0])
+    links.new(artifact_sum.outputs[0], frost_plus_artifacts.inputs[1])
+    links.new(frost_plus_artifacts.outputs[0], sum2.inputs[1])
     sum3 = math_node(nodes, 'ADD', (1360, 235), 'Cool tint')
     links.new(sum2.outputs[0], sum3.inputs[0])
     driver_socket(sum3.inputs[1], obj, 'bvt_glass_tint')
@@ -172,7 +246,15 @@ def configure_glass(obj):
     transparent.location = (1550, -50)
     reflection = nodes.new('ShaderNodeEmission')
     reflection.location = (1550, -220)
-    reflection.inputs['Color'].default_value = (.88, .95, 1.0, 1.0)
+    # Dirt mask darkens only the affected spots, not the entire glass plane.
+    dirt_color = nodes.new('ShaderNodeMixRGB')
+    dirt_color.name = 'BVT_Dirt_Tint'
+    dirt_color.location = (1330, -340)
+    dirt_color.blend_type = 'MIX'
+    dirt_color.inputs['Color1'].default_value = (.88, .95, 1.0, 1.0)
+    dirt_color.inputs['Color2'].default_value = (.22, .23, .24, 1.0)
+    links.new(dirt_strength.outputs[0], dirt_color.inputs['Fac'])
+    links.new(dirt_color.outputs['Color'], reflection.inputs['Color'])
     mix = nodes.new('ShaderNodeMixShader')
     mix.location = (1780, 160)
     links.new(alpha.outputs[0], mix.inputs[0])

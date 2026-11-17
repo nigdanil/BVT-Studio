@@ -33,6 +33,34 @@ class BVTStudioQualityItem(bpy.types.PropertyGroup):
 
 
 class BVTStudioSettings(bpy.types.PropertyGroup):
+    artifact_target_glass: PointerProperty(
+        name='Glass Target', type=bpy.types.Object,
+        description='Glass material target, even if the glass object is selection-locked',
+    )
+    artifact_preset: EnumProperty(
+        name='Glass Preset',
+        items=[
+            ('CLEAN', 'Clean', 'Minimal artifact baseline'),
+            ('LIGHT_CONDENSATION', 'Light Condensation', 'Gentle condensed moisture'),
+            ('HEAVY_CONDENSATION', 'Heavy Condensation', 'Strong condensation and droplets'),
+            ('FROST', 'Frost', 'Patchy cold freezer frost'),
+            ('DIRTY_GLASS', 'Dirty Glass', 'Smudges and dirt'),
+            ('REFLECTIONS', 'Reflections', 'Pronounced cool LED reflections'),
+        ],
+        default='LIGHT_CONDENSATION',
+    )
+    artifact_intensity: FloatProperty(
+        name='Intensity', default=1.0, min=0.0, max=1.0,
+        description='Multiplier applied to all selected preset channels',
+    )
+    artifact_coverage: FloatProperty(
+        name='Coverage', default=0.30, min=0.0, max=1.0,
+        description='Relative droplet density; controlled independently of strength',
+    )
+    artifact_seed: IntProperty(
+        name='Seed', default=42, min=0, max=2147483647,
+        description='Deterministic microstructure seed for the selected glass plane',
+    )
     quality_items: CollectionProperty(type=BVTStudioQualityItem)
     quality_index: IntProperty(name='Issue row', default=-1)
     quality_checked: BoolProperty(name='Quality report available', default=False)

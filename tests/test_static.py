@@ -14,7 +14,7 @@ class TestSource(unittest.TestCase):
                 ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
 
     def test_version_bumped(self):
-        self.assertIn('"version": (0, 3, 0)', (PACKAGE / '__init__.py').read_text())
+        self.assertIn('"version": (0, 4, 0)', (PACKAGE / '__init__.py').read_text())
 
     def test_glass_operators_have_unique_ids(self):
         content = (PACKAGE / 'glass.py').read_text()
@@ -46,7 +46,7 @@ class TestSource(unittest.TestCase):
         init = (PACKAGE / '__init__.py').read_text()
         ui = (PACKAGE / 'ui.py').read_text()
         props = (PACKAGE / 'props.py').read_text()
-        self.assertIn('scene_lock, depth, quality_gate, ui', init)
+        self.assertIn('scene_lock, depth, quality_gate, artifact_presets, ui', init)
         for key in ('photo_edit_enable', 'camera_edit_enable', 'light_edit_enable',
                     'glass_edit_enable', 'annotations_edit_enable'):
             self.assertIn(key, ui)

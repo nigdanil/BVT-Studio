@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.3.0-alpha.6
+# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.1
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -304,4 +304,31 @@ Blender smoke check (from repository root, Git Bash):
 ```bash
 "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
   --background --factory-startup --python scripts/blender_quality_gate_smoke.py
+```
+
+
+## v0.4-alpha.1 — Deterministic glass artifact presets
+
+The Glass / Artifacts panel now exposes one-target preset controls:
+`Clean`, `Light Condensation`, `Heavy Condensation`, `Frost`,
+`Dirty Glass`, `Reflections`. Each applies to the selected or explicitly
+chosen **Glass Target**, including objects locked in Annotation Mode.
+The procedure changes **only material and custom properties** — no position,
+geometry, camera, photo source, or YOLO annotation is modified.
+
+`Intensity` scales the preset strengths; `Coverage` controls procedural
+micro-droplet density; `Seed` chooses a reproducible Voronoi/dirt UV pattern.
+`Reflections`, `Haze`, `Frost`, `Droplets`, `Dirt` and `Coverage` object
+sliders update the material through drivers. An edited **Object Seed** needs
+`Refresh Glass Pattern` to regenerate the UV pattern.
+
+All presets are procedural and approximate, not physically validated
+ice/fog optics. The original image is never modified. These controls are
+for image variation; dataset batch randomization remains a future stage.
+
+Blender smoke (run from repository root):
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python scripts/blender_glass_artifacts_smoke.py
 ```

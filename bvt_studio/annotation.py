@@ -396,7 +396,12 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
                 glass=[
                     dict(object=o.name, reflection=o.get('bvt_glass_reflection', 0),
                          tint=o.get('bvt_glass_tint', 0), haze=o.get('bvt_glass_haze', 0),
-                         frost=o.get('bvt_glass_frost', 0))
+                         frost=o.get('bvt_glass_frost', 0),
+                         droplets=o.get('bvt_glass_droplets', 0),
+                         dirt=o.get('bvt_glass_dirt', 0),
+                         artifact_coverage=o.get('bvt_artifact_coverage', 0),
+                         artifact_seed=o.get('bvt_artifact_seed', 0),
+                         artifact_preset=o.get('bvt_artifact_preset', 'CUSTOM'))
                     for o in scene.objects if o.get('bvt_role') == 'glass_overlay'
                 ],
                 note='One scene photo, no automatic validation split; val is empty',

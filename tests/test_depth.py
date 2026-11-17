@@ -112,7 +112,7 @@ class TestLayerDepth(unittest.TestCase):
         init = (base / '__init__.py').read_text(encoding='utf-8')
         ui = (base / 'ui.py').read_text(encoding='utf-8')
         props = (base / 'props.py').read_text(encoding='utf-8')
-        self.assertIn('scene_lock, depth, quality_gate, ui', init)
+        self.assertIn('scene_lock, depth, quality_gate, artifact_presets, ui', init)
         for key in ('photo_depth_lock', 'glass_depth_lock',
                     'annotations_depth_lock', 'depth_target_glass',
                     'glass_depth_offset_m'):

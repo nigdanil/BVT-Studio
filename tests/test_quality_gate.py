@@ -76,7 +76,7 @@ class TestQualityGate(unittest.TestCase):
         init = (ROOT/'bvt_studio'/'__init__.py').read_text(encoding='utf8')
         ui = (ROOT/'bvt_studio'/'ui.py').read_text(encoding='utf8')
         anno = (ROOT/'bvt_studio'/'annotation.py').read_text(encoding='utf8')
-        self.assertIn('quality_gate, ui', init)
+        self.assertIn('quality_gate, artifact_presets, ui', init)
         self.assertIn('BVTSTUDIO_UL_quality_issues', ui)
         self.assertIn('bvt_studio.focus_quality_issue', ui)
         self.assertIn('evaluate_quality(scene)', anno)
