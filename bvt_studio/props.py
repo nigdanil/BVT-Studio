@@ -252,7 +252,7 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
     )
     visual_quality_report_path: StringProperty(
         name='Visual QA JSON', subtype='FILE_PATH',
-        default='//qa_renders/visual_quality_step4/visual_quality_report.json',
+        default='//qa_renders/quality_gate_step5/quality_gate_v2_report.json',
         description='Previously created headless visual calibration report',
     )
     visual_quality_result: StringProperty(name='Visual QA Result', default='Not evaluated')

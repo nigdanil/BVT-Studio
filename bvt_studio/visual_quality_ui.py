@@ -15,11 +15,21 @@ class BVTSTUDIO_OT_read_visual_quality_report(bpy.types.Operator):
         try:
             path = Path(bpy.path.abspath(str(settings.visual_quality_report_path))).expanduser()
             data = json.loads(path.read_text(encoding='utf-8'))
-            if data.get('stage') != 'alpha.5-step4' or not isinstance(data.get('candidates'), dict):
-                raise ValueError('Not a BVT visual quality Step 4 report')
-            chosen = data.get('selected')
+            stage = data.get('stage')
             passed = bool(data.get('overall_accepted', False))
-            settings.visual_quality_result = (f'PASS: {chosen}' if passed else 'QA REJECTED / REVIEW')
+            if stage == 'alpha.5-step4' and isinstance(data.get('candidates'), dict):
+                chosen = data.get('selected')
+                message = f'PASS: {chosen}' if passed else 'QA REJECTED / REVIEW'
+            elif stage == 'alpha.5-step5' and isinstance(data.get('profiles'), dict):
+                profiles = data['profiles']
+                if not profiles:
+                    raise ValueError('Empty Quality Gate v2 profiles')
+                pairs = [f'{profile.title()}={item.get("selected") or "reject"}'
+                         for profile, item in profiles.items()]
+                message = ('QGv2 PASS: ' if passed else 'QGv2 REJECT: ') + ', '.join(pairs)
+            else:
+                raise ValueError('Not a BVT Visual Quality Step 4 / Quality Gate v2 report')
+            settings.visual_quality_result = message
             settings.visual_quality_status = passed
             self.report({'INFO'} if passed else {'WARNING'}, settings.visual_quality_result)
             return {'FINISHED'}

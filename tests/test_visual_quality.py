@@ -50,8 +50,8 @@ class VisualQualityContractTests(unittest.TestCase):
             self.assertIn(needle, contents)
         ui = (ROOT/'bvt_studio/ui.py').read_text('utf-8')
         self.assertIn('bvt_studio.read_visual_quality_report', ui)
-        self.assertIn('alpha.5-step4', (ROOT/'bvt_studio/__init__.py').read_text('utf-8'))
-        self.assertIn('BVT_Studio_Blender_Addon_v0.4.0-alpha.5-step4.zip',
+        self.assertIn('alpha.5-step5', (ROOT/'bvt_studio/__init__.py').read_text('utf-8'))
+        self.assertIn('BVT_Studio_Blender_Addon_v0.4.0-alpha.5-step5.zip',
                       (ROOT/'scripts/build_addon.py').read_text('utf-8'))
         for path in ('annotation.py','annotation_manager.py','quality_gate.py',
                      'export_preview.py','validation.py'):

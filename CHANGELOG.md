@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0-alpha.5-step5 — 2026-11-18
+
+- Add target-matched optical Quality Gate v2 with distinct Light / Medium / Heavy
+  synthetic atlas densities and streak amounts. Provisional intensity bands
+  replace Step 4's unconditional reward for stronger optical differences.
+- Add sensitive bright-contact-rim, local SKU gradient suppression, mean colour
+  drift, precision-mask leakage metrics, and explicit per-glass isolation QA.
+- Preserve read-only YOLO Detect TXT as SKU ROI, verify SHA256 after QA; otherwise
+  mark approximate ROI provenance. No YOLO or dataset-export source changes.
+- Add Blender 3x3 optical comparison, 2x2 selected-profile montage, JSON report,
+  packed last-profile `.blend` persistence smoke and sidebar report support.
+- Metrics are numerical proxies and masks use a synthetic QA fixture; neither
+  constitutes proof of OCR quality or photorealistic water.
+
 ## 0.4.0-alpha.5-step2 — 2026-11-18
 
 - Add `REALISTIC_ATLAS` as a third independent glass droplet source: procedurally

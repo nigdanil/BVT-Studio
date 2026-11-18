@@ -1,5 +1,5 @@
 """BVT Studio — 2.5D image, glass and YOLO workflow for Blender 5.2+."""
-BUILD_STAGE = "alpha.5-step4"
+BUILD_STAGE = "alpha.5-step5"
 bl_info = {
     "name": "BVT Studio — 2.5D Dataset Builder",
     "author": "BVT Studio contributors",

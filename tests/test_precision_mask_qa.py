@@ -37,7 +37,7 @@ class PrecisionMaskQA(unittest.TestCase):
         presets = (ROOT/'bvt_studio/artifact_presets.py').read_text('utf-8')
         for source in (init, props, shaders, presets):
             ast.parse(source)
-        self.assertIn('alpha.5-step4', init)
+        self.assertIn('alpha.5-step5', init)
         self.assertIn('QA_TRANSPARENT', props)
         self.assertIn("obj.get('bvt_artifact_preset') == 'QA_TRANSPARENT'", shaders)
         self.assertIn('apply_precision_mask(', shaders)

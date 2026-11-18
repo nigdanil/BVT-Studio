@@ -626,3 +626,15 @@ For instructions, thresholds and visual limitations, see
 [Visual Quality Step 4](docs/VISUAL_QUALITY_STEP4.md). In Blender, the
 **Glass Artifact Engine → Visual Quality Calibration** section can load its
 `visual_quality_report.json` to display the recommendation.
+
+## alpha.5-step5 — Quality Gate v2
+
+Target-based **LIGHT/MEDIUM/HEAVY** synthetic condensation calibration with
+three independent optic variants, per-glass Precision Mask leakage checks,
+local highlight/gradient detail proxies and optional read-only YOLO Detect TXT
+as SKU regions. Selection penalizes deviation from a profile's target optical
+intensity; **maximum distortion no longer wins by default**. All thresholds
+are provisional; no OCR or photorealism guarantee is implied. See
+[Quality Gate v2 Step 5](docs/QUALITY_GATE_V2_STEP5.md) for the Blender
+headless commands, outputs, persistence smoke and limitations. The sidebar's
+Visual Quality report reader now accepts the v2 JSON as well as legacy Step 4.
