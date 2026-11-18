@@ -144,7 +144,7 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         settings = context.scene.bvt_studio
-        selected = context.active_object
+        selected = settings.artifact_target_glass or context.active_object
         layout.prop(settings, 'artifact_target_glass', text='Glass Target')
         layout.prop(settings, 'artifact_preset', text='Preset')
         layout.prop(settings, 'artifact_intensity', slider=True)

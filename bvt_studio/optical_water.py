@@ -130,16 +130,16 @@ def optical_sockets(obj, nodes, links, x, y, height, glass_mask):
     highlight = _math(nodes, links, 'BVT_Optical_Specular_Gain', 'MULTIPLY', highlight)
     driver_socket(highlight.node.inputs[1], obj, GLINT_KEY)
     highlight = _math(nodes, links, 'BVT_Optical_Specular_LowEnergy',
-                      'MULTIPLY', highlight, const=.095)
+                      'MULTIPLY', highlight, const=(.19 if obj.get('bvt_optical_stress_test', False) else .095))
     highlight = _math(nodes, links, 'BVT_Optical_Specular_Limit',
-                      'MINIMUM', highlight, const=.16)
+                      'MINIMUM', highlight, const=(.28 if obj.get('bvt_optical_stress_test', False) else .16))
     shade = _math(nodes, links, 'BVT_Optical_Shadow_Contact', 'MULTIPLY', negative, band)
     shade = _math(nodes, links, 'BVT_Optical_Shadow_Gain', 'MULTIPLY', shade)
     driver_socket(shade.node.inputs[1], obj, EDGE_KEY)
     shade = _math(nodes, links, 'BVT_Optical_Shadow_LowEnergy',
-                  'MULTIPLY', shade, const=.070)
+                  'MULTIPLY', shade, const=(.14 if obj.get('bvt_optical_stress_test', False) else .070))
     shade = _math(nodes, links, 'BVT_Optical_Shadow_Limit',
-                  'MINIMUM', shade, const=.10)
+                  'MINIMUM', shade, const=(.19 if obj.get('bvt_optical_stress_test', False) else .10))
 
     # Sparse tiny highlights in the small-height band; do not add an all-over film.
     micro_lo = _range(nodes, links, 'BVT_Optical_Micro_Low', height, .03, .17)
@@ -149,7 +149,7 @@ def optical_sockets(obj, nodes, links, x, y, height, glass_mask):
     micro = _math(nodes, links, 'BVT_Optical_Micro_Mask', 'MULTIPLY', micro, glass_mask)
     micro = _math(nodes, links, 'BVT_Optical_Micro_Amount', 'MULTIPLY', micro)
     driver_socket(micro.node.inputs[1], obj, MICRO_KEY)
-    micro = _math(nodes, links, 'BVT_Optical_Micro_Clamp', 'MINIMUM', micro, const=.025)
+    micro = _math(nodes, links, 'BVT_Optical_Micro_Clamp', 'MINIMUM', micro, const=(.06 if obj.get('bvt_optical_stress_test', False) else .025))
 
     return highlight, shade, micro
 

@@ -2,6 +2,7 @@
 import ast
 import unittest
 from pathlib import Path
+from _bvt_contract_v02 import assert_registered_modules
 
 ROOT = Path(__file__).resolve().parents[1]
 ENGINE = ROOT/'bvt_studio'/'optical_water.py'
@@ -60,7 +61,8 @@ class OpticalWaterTests(unittest.TestCase):
             self.assertIn(name,ui)
         self.assertIn('bvt_studio.apply_optical_water',ui)
         self.assertIn('bvt_studio.disable_optical_water',ui)
-        self.assertIn('optical_water, visual_quality_ui)',addon)
+        assert_registered_modules(self, addon, 'optical_water',
+                                  'visual_quality_ui', 'glass_v02_ui')
         self.assertIn('alpha.5-step5',addon)
 
     def test_smoke_and_reopen_scripts(self):
@@ -85,9 +87,30 @@ class OpticalWaterTests(unittest.TestCase):
             "'BVT_Optical_Bright_Arc_Threshold'",
             "'BVT_Optical_Specular_Limit'",
             "'BVT_Optical_Shadow_Limit'",
-            "'BVT_Optical_Micro_Clamp', 'MINIMUM', micro, const=.025",
+            "'BVT_Optical_Micro_Clamp'",
         ):
             self.assertIn(needle, optical)
+        # The v0.2 source has two explicit contact limits.  Assert their
+        # numerical branches, not an obsolete hard-coded source substring.
+        tree = ast.parse(optical)
+        func = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+                    and n.name == 'optical_sockets')
+        clamps = [
+            kw.value
+            for node in ast.walk(func)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name) and node.func.id == '_math'
+            and any(isinstance(arg, ast.Constant)
+                    and arg.value == 'BVT_Optical_Micro_Clamp'
+                    for arg in node.args)
+            for kw in node.keywords if kw.arg == 'const'
+        ]
+        self.assertEqual(len(clamps), 1)
+        self.assertIsInstance(clamps[0], ast.IfExp)
+        self.assertEqual(ast.literal_eval(clamps[0].orelse), .025)
+        self.assertEqual(ast.literal_eval(clamps[0].body), .06)
+        self.assertIn('bvt_optical_stress_test', ast.unparse(clamps[0].test))
+
         for needle in (
             "'BVT_Optical_Refraction_Gain_Softener'",
             "'BVT_Optical_Refraction_SoftGain'",

@@ -10,9 +10,9 @@ bl_info = {
     "category": "3D View",
 }
 
-from . import props, scene_tools, glass, annotation, annotation_manager, scene_lock, depth, quality_gate, artifact_presets, ui, glass_mask, droplet_maps, realistic_atlas, optical_water, visual_quality_ui
+from . import glass_v02_ui, props, scene_tools, glass, annotation, annotation_manager, scene_lock, depth, quality_gate, artifact_presets, ui, glass_mask, droplet_maps, realistic_atlas, optical_water, visual_quality_ui
 
-MODULES = (props, scene_tools, glass, annotation, annotation_manager, scene_lock, depth, quality_gate, artifact_presets, ui, glass_mask, droplet_maps, realistic_atlas, optical_water, visual_quality_ui)
+MODULES = (props, scene_tools, glass, annotation, annotation_manager, scene_lock, depth, quality_gate, artifact_presets, ui, glass_mask, droplet_maps, realistic_atlas, optical_water, visual_quality_ui, glass_v02_ui)
 
 
 def register():

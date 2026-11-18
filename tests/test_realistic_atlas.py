@@ -3,6 +3,7 @@ import ast
 import importlib.util
 import unittest
 from pathlib import Path
+from _bvt_contract_v02 import assert_registered_modules
 try:
     import numpy as np
 except ModuleNotFoundError as exc:
@@ -45,7 +46,9 @@ class RealisticAtlasTests(unittest.TestCase):
                       "obj[MODE_KEY] = 'PHOTO_MAPS'", "obj[MODE_KEY] = 'REALISTIC_ATLAS'"):
             self.assertIn(token, src)
         self.assertIn('generate_realistic_atlas', (ROOT/'bvt_studio/ui.py').read_text('utf-8'))
-        self.assertIn('realistic_atlas, optical_water, visual_quality_ui)', (ROOT/'bvt_studio/__init__.py').read_text('utf-8'))
+        assert_registered_modules(self, (ROOT/'bvt_studio/__init__.py').read_text('utf-8'),
+                                  'realistic_atlas', 'optical_water',
+                                  'visual_quality_ui', 'glass_v02_ui')
         self.assertIn("== 'REALISTIC_ATLAS'", (ROOT/'bvt_studio/hybrid_condensation.py').read_text('utf-8'))
 
     def test_inactive_map_bank_survives_blend_save_reopen(self):

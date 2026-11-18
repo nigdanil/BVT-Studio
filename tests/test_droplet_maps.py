@@ -3,6 +3,7 @@ import ast
 import math
 import unittest
 from pathlib import Path
+from _bvt_contract_v02 import assert_registered_modules
 
 ROOT = Path(__file__).resolve().parents[1]
 MAPS = ROOT / 'bvt_studio' / 'droplet_maps.py'
@@ -75,7 +76,8 @@ class PhotoDropletMapsTests(unittest.TestCase):
         ui = (ROOT/'bvt_studio/ui.py').read_text(encoding='utf-8')
         props = (ROOT/'bvt_studio/props.py').read_text(encoding='utf-8')
         self.assertIn('alpha.5-step5', init)
-        self.assertIn('droplet_maps, realistic_atlas, optical_water, visual_quality_ui)', init)
+        assert_registered_modules(self, init, 'droplet_maps', 'realistic_atlas',
+                                  'optical_water', 'visual_quality_ui', 'glass_v02_ui')
         for key in ('droplet_alpha_path','droplet_height_path','droplet_normal_path',
                     'droplet_map_tiling','droplet_map_rotation'):
             self.assertIn(key, ui)
