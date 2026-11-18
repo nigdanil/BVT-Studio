@@ -261,17 +261,23 @@ def build_hybrid_shader(obj, nodes, links, output, tex):
     from .glass import driver_socket
     from .glass_realism import image_uv_bounds, source_for_glass
 
-    atlas = ensure_atlas(obj)
-    atlas_sample = nodes.new('ShaderNodeTexImage')
-    atlas_sample.name = 'BVT_Hybrid_Atlas'
-    atlas_sample.image = atlas
-    atlas_sample.extension = 'CLIP'
-    atlas_sample.interpolation = 'Linear'
-    links.new(tex.outputs['UV'], atlas_sample.inputs['Vector'])
-    channels = nodes.new('ShaderNodeSeparateColor')
-    channels.name = 'BVT_Hybrid_Channels'
-    links.new(atlas_sample.outputs['Color'], channels.inputs['Color'])
-    height, gx, gy = (channels.outputs[s] for s in ('Red', 'Green', 'Blue'))
+    from .droplet_maps import MODE_KEY, droplet_photo_channels
+    if obj.get(MODE_KEY, 'PROCEDURAL') == 'PHOTO_MAPS':
+        height, gx, gy, wet_film = droplet_photo_channels(
+            obj, nodes, links, tex.outputs['UV'])
+    else:
+        atlas = ensure_atlas(obj)
+        atlas_sample = nodes.new('ShaderNodeTexImage')
+        atlas_sample.name = 'BVT_Hybrid_Atlas'
+        atlas_sample.image = atlas
+        atlas_sample.extension = 'CLIP'
+        atlas_sample.interpolation = 'Linear'
+        links.new(tex.outputs['UV'], atlas_sample.inputs['Vector'])
+        channels = nodes.new('ShaderNodeSeparateColor')
+        channels.name = 'BVT_Hybrid_Channels'
+        links.new(atlas_sample.outputs['Color'], channels.inputs['Color'])
+        height, gx, gy = (channels.outputs[s] for s in ('Red', 'Green', 'Blue'))
+        wet_film = atlas_sample.outputs['Alpha']
 
     glass_mask = _combined_glass_mask(obj, nodes, links, tex.outputs['UV'])
 
@@ -316,7 +322,7 @@ def build_hybrid_shader(obj, nodes, links, output, tex):
     transparent.name = 'BVT_Hybrid_Clear_Glass'
     shader = transparent.outputs['BSDF']
 
-    haze = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Wet_Amount', left=atlas_sample.outputs['Alpha'])
+    haze = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Wet_Amount', left=wet_film)
     driver_socket(haze.node.inputs[1], obj, 'bvt_glass_haze')
     haze = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Wet_Opacity', left=haze, constant=.50)
     haze = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Wet_Masked', left=haze, right=glass_mask)

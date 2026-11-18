@@ -6,7 +6,7 @@ import ast
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / 'bvt_studio'
-DEST = ROOT / 'dist' / 'BVT_Studio_Blender_Addon_v0.4.0-alpha.4-step4.zip'
+DEST = ROOT / 'dist' / 'BVT_Studio_Blender_Addon_v0.4.0-alpha.5-step1.zip'
 
 def build():
     sources = sorted(PACKAGE.rglob('*.py'))

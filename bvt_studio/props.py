@@ -122,6 +122,26 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='QA Max Leakage', default=0.0005, min=0.0, max=0.1, precision=5,
         description='Maximum fraction of tested forbidden pixels allowed to change',
     )
+    droplet_alpha_path: StringProperty(
+        name='Alpha PNG', subtype='FILE_PATH', default='',
+        description='Grayscale droplet occupancy: black clear, white water',
+    )
+    droplet_height_path: StringProperty(
+        name='Height PNG', subtype='FILE_PATH', default='',
+        description='Grayscale height image matching Alpha PNG dimensions',
+    )
+    droplet_normal_path: StringProperty(
+        name='Normal PNG', subtype='FILE_PATH', default='',
+        description='OpenGL tangent RGB normal map (+Y), same dimensions',
+    )
+    droplet_map_tiling: FloatProperty(
+        name='Map Tiling', default=1.0, min=0.25, max=8.0,
+        description='Number of repeats of photographic maps across the glass',
+    )
+    droplet_map_rotation: FloatProperty(
+        name='Map Rotation', default=0.0, min=-180.0, max=180.0,
+        description='Map orientation for imported droplets in degrees',
+    )
     artifact_seed: IntProperty(
         name='Seed', default=42, min=0, max=2147483647,
         description='Deterministic microstructure seed for the selected glass plane',

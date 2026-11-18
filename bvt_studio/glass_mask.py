@@ -35,7 +35,7 @@ def load_mask_for_glass(obj, filepath):
         raise ValueError('Select a registered BVT Glass Plane')
     if obj.library is not None or obj.data.library is not None:
         raise ValueError('Cannot edit masks on linked library glass')
-    full = Path(bpy.path.abspath(filepath)).expanduser().resolve()
+    full = Path(bpy.path.abspath(str(filepath))).expanduser().resolve()
     if full.suffix.lower() != '.png' or not full.is_file():
         raise ValueError('Glass mask must be an existing PNG file')
     image = bpy.data.images.load(str(full), check_existing=False)

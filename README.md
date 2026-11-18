@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.4-step1
+# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.5-step1
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -495,3 +495,38 @@ your freezer frame. Replace them with hand-drawn or segmented masks for producti
 Use `--save-blend` only when you explicitly want a new QA .blend saved; masks and
 parameters will be packed and persist across reopening. The QA script does not
 write to a user-supplied `.blend`, and never edits YOLO objects.
+
+
+## alpha.5-step1 — Photographic water droplet maps
+
+In **N → BVT Studio → Glass Artifact Engine** select one `Glass_p_*`.
+Under **Photographic Droplets** provide **three different, same-sized PNG files**:
+**Alpha** (black=no droplet; white=full droplet; gray=partial), **Height**
+(black=low; white=high) and **Normal** (OpenGL tangent convention RGB;
+neutral=(128,128,255), +Y=green). All three are sampled as **Non-Color**.
+Use **Import & Pack Droplet Maps** to switch that glass to `PHOTO_MAPS`.
+The images are packed into the `.blend`, so they persist across machines.
+The **Procedural / Photo Maps** buttons select the source for the chosen glass;
+**Map Tiling**, **Map Rotation (degrees)** and the glass's Seed reproduce the
+photo-map placement (click **Photo Maps** again to apply edited transforms).
+Only **Light Condensation** and **Heavy Condensation** consume droplet maps.
+**QA Transparent** and Frost/Dirty/Reflections retain their existing behavior.
+Precision PNG Glass Masks continue to gate the *final* material independently.
+A missing packed source image raises an error instead of falling back silently.
+
+**Realism is input-dependent:** the patch provides a rendering pathway, not
+photographic source textures. The Blender QA script generates synthetic PNGs
+to test import/packing/seed/masking only; those generated maps must not be
+represented as real droplet photographs or photorealistic training data.
+
+Run the Blender visual gate with your own source photo:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python-exit-code 1 \
+  --python scripts/blender_droplet_maps_gallery.py -- \
+  --photo "C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png" \
+  --output "D:/BVT-Studio/qa_renders/photo_droplets_step1"
+```
+
+Do not accept visual quality until you run this with suitable real photo maps.

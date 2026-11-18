@@ -177,6 +177,22 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
                             text='Disable PNG Mask' if mask_enabled else 'Enable PNG Mask',
                             icon='CHECKBOX_HLT' if mask_enabled else 'CHECKBOX_DEHLT')
         layout.prop(settings, 'qa_leakage_limit')
+        layout.separator()
+        layout.label(text='Photographic Droplets (Light / Heavy):', icon='IMAGE_DATA')
+        layout.prop(settings, 'droplet_alpha_path', text='Alpha PNG')
+        layout.prop(settings, 'droplet_height_path', text='Height PNG')
+        layout.prop(settings, 'droplet_normal_path', text='Normal PNG')
+        layout.prop(settings, 'droplet_map_tiling', slider=True)
+        layout.prop(settings, 'droplet_map_rotation')
+        layout.operator('bvt_studio.assign_droplet_maps',
+                        text='Import & Pack Droplet Maps', icon='IMPORT')
+        droplet_target = settings.artifact_target_glass or selected
+        if droplet_target and droplet_target.get('bvt_role') == 'glass_overlay':
+            source_mode = droplet_target.get('bvt_droplet_source_mode', 'PROCEDURAL')
+            layout.label(text='Target droplet source: ' + source_mode)
+            row = layout.row(align=True)
+            row.operator('bvt_studio.use_droplet_procedural', text='Procedural')
+            row.operator('bvt_studio.use_droplet_photos', text='Photo Maps')
         layout.operator('bvt_studio.apply_glass_preset',
                         text='Apply Glass Preset', icon='CHECKMARK')
         layout.operator('bvt_studio.refresh_glass_pattern',

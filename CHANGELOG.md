@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0-alpha.5-step1 — 2026-11-17
+
+- Support three user-supplied photographic droplet PNG maps (Alpha/Height/OpenGL Normal) per glass.
+- Pack each imported image into the .blend; fail closed for missing/incompatible maps.
+- Switch each glass independently between procedural atlas and photo-map shader with reproducible seed, rotation, and tiling.
+- Keep existing precision glass masks and YOLO/export untouched.
+- Add a Blender visual QA script with generated *test* maps; real photographic assets remain user-provided.
+
 ## 0.4.0-alpha.4-step4 — Precision Glass Mask & QA
 
 - Add QA_TRANSPARENT, an inert material for a pixel-accurate baseline; legacy CLEAN remains unchanged.
