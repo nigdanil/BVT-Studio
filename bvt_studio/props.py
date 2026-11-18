@@ -250,6 +250,14 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Last exported SVG preview', subtype='FILE_PATH', default='',
         description='Full path to the last exported YOLO overlay',
     )
+    visual_quality_report_path: StringProperty(
+        name='Visual QA JSON', subtype='FILE_PATH',
+        default='//qa_renders/visual_quality_step4/visual_quality_report.json',
+        description='Previously created headless visual calibration report',
+    )
+    visual_quality_result: StringProperty(name='Visual QA Result', default='Not evaluated')
+    visual_quality_status: BoolProperty(name='Visual QA accepted', default=False)
+
     export_dir: StringProperty(
         name="Output folder", subtype='DIR_PATH', default="//bvt_studio_dataset",
     )

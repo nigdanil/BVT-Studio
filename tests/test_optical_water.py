@@ -60,8 +60,8 @@ class OpticalWaterTests(unittest.TestCase):
             self.assertIn(name,ui)
         self.assertIn('bvt_studio.apply_optical_water',ui)
         self.assertIn('bvt_studio.disable_optical_water',ui)
-        self.assertIn('optical_water)',addon)
-        self.assertIn('alpha.5-step3',addon)
+        self.assertIn('optical_water, visual_quality_ui)',addon)
+        self.assertIn('alpha.5-step4',addon)
 
     def test_smoke_and_reopen_scripts(self):
         a = (ROOT/'scripts/blender_optical_water_gallery.py').read_text('utf-8')

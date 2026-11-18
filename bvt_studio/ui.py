@@ -216,6 +216,14 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
         row = layout.row(align=True)
         row.operator('bvt_studio.apply_optical_water', text='Enable Optics', icon='HIDE_OFF')
         row.operator('bvt_studio.disable_optical_water', text='Disable Optics', icon='HIDE_ON')
+        layout.separator()
+        layout.label(text='Visual Quality Calibration (Step 4):', icon='VIEWZOOM')
+        layout.prop(settings, 'visual_quality_report_path', text='QA Report JSON')
+        layout.operator('bvt_studio.read_visual_quality_report',
+                        text='Read Visual QA Report', icon='FILE_REFRESH')
+        layout.label(text=settings.visual_quality_result, icon='CHECKMARK'
+                     if settings.visual_quality_status else 'INFO')
+        layout.label(text='Generate QA report with headless Blender script.', icon='INFO')
         layout.operator('bvt_studio.apply_glass_preset',
                         text='Apply Glass Preset', icon='CHECKMARK')
         layout.operator('bvt_studio.refresh_glass_pattern',

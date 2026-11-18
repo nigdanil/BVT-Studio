@@ -98,7 +98,7 @@ class HybridCondensationTests(unittest.TestCase):
             self.assertIn(v, ui)
             self.assertIn(v, presets)
             self.assertIn(v, (ROOT/'bvt_studio/props.py').read_text())
-        self.assertIn('alpha.5-step3', (ROOT/'bvt_studio/__init__.py').read_text())
+        self.assertIn('alpha.5-step4', (ROOT/'bvt_studio/__init__.py').read_text())
 
     def test_gallery_opt_in_photo_and_no_zip(self):
         p = ROOT / 'scripts/blender_hybrid_condensation_gallery.py'

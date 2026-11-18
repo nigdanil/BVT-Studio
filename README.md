@@ -612,3 +612,17 @@ on the same photo and compare `06_optical_off.png` vs `07_optical_on.png`;
 `08_optical_restored.png` should still be exactly the OFF render.
 This does not change Alpha/Height/Normal atlas pixels, masks, or YOLO export.
 A realistic look still requires visual approval on your freezer photo.
+
+## alpha.5-step4 — Visual Quality Calibration
+
+Run `scripts/blender_visual_quality_calibration.py` on an existing photo to
+compare optical settings on a fixed Realistic Atlas. The script reuses the
+four-section precision-mask QA fixture, reports leakage/bright-outlier/edge
+retention proxies, exports a four-way PNG montage and chooses a passing
+candidate (or explicitly reports none). Existing YOLO Detect TXT can be used
+**read-only** as SKU regions of interest. No OCR accuracy is inferred.
+
+For instructions, thresholds and visual limitations, see
+[Visual Quality Step 4](docs/VISUAL_QUALITY_STEP4.md). In Blender, the
+**Glass Artifact Engine → Visual Quality Calibration** section can load its
+`visual_quality_report.json` to display the recommendation.

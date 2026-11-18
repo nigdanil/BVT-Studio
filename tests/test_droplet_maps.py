@@ -74,8 +74,8 @@ class PhotoDropletMapsTests(unittest.TestCase):
         init = (ROOT/'bvt_studio/__init__.py').read_text(encoding='utf-8')
         ui = (ROOT/'bvt_studio/ui.py').read_text(encoding='utf-8')
         props = (ROOT/'bvt_studio/props.py').read_text(encoding='utf-8')
-        self.assertIn('alpha.5-step3', init)
-        self.assertIn('droplet_maps, realistic_atlas, optical_water)', init)
+        self.assertIn('alpha.5-step4', init)
+        self.assertIn('droplet_maps, realistic_atlas, optical_water, visual_quality_ui)', init)
         for key in ('droplet_alpha_path','droplet_height_path','droplet_normal_path',
                     'droplet_map_tiling','droplet_map_rotation'):
             self.assertIn(key, ui)
