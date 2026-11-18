@@ -203,6 +203,19 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
         if droplet_target and droplet_target.get('bvt_role') == 'glass_overlay':
             layout.operator('bvt_studio.use_realistic_atlas',
                             text='Use Saved Realistic Atlas', icon='CHECKMARK')
+        layout.separator()
+        layout.label(text='Optical Water (Realistic Atlas only):', icon='SHADING_RENDERED')
+        layout.prop(settings, 'optical_lens_gain', slider=True)
+        layout.prop(settings, 'optical_edge_gain', slider=True)
+        layout.prop(settings, 'optical_glint_gain', slider=True)
+        layout.prop(settings, 'optical_micro_gain', slider=True)
+        if droplet_target and droplet_target.get('bvt_role') == 'glass_overlay':
+            layout.label(text='Optical mode: ' + ('ON' if droplet_target.get('bvt_optical_water_enabled', False)
+                                                 and droplet_target.get('bvt_droplet_source_mode') == 'REALISTIC_ATLAS'
+                                                 else 'OFF'))
+        row = layout.row(align=True)
+        row.operator('bvt_studio.apply_optical_water', text='Enable Optics', icon='HIDE_OFF')
+        row.operator('bvt_studio.disable_optical_water', text='Disable Optics', icon='HIDE_ON')
         layout.operator('bvt_studio.apply_glass_preset',
                         text='Apply Glass Preset', icon='CHECKMARK')
         layout.operator('bvt_studio.refresh_glass_pattern',

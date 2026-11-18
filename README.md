@@ -588,3 +588,27 @@ the saved .blend; replacement and rollback remove orphaned old images correctly.
 Existing smoke .blend files created before this fix may already have lost the
 inactive map bank. **Rerun blender_realistic_droplet_atlas_gallery.py with
 --save-blend** to regenerate and save both banks, then rerun the persistence smoke.
+
+## Optical Water — `v0.4.0-alpha.5-step3`
+
+Optional atlas-only rim/highlight/lens improvements for the generated
+`REALISTIC_ATLAS` source. The previous `PROCEDURAL` and `PHOTO_MAPS` shaders
+remain unchanged, and optical settings are per Glass Plane (persist in `.blend`).
+In Blender, use **N → BVT Studio → 4. Glass Artifact Engine → Optical Water**
+and select **Enable Optics** / **Disable Optics** to compare the same atlas.
+No extra texture downloads or ZIP assets are required for the A/B smoke test.
+
+See [Optical Water Step 3](docs/OPTICAL_WATER_STEP3.md) for scene setup, headless
+comparison, persistence checks, known limitations and reproducibility.
+
+
+### Optical anti-halo correction (alpha.5-step3 QA)
+
+The optional `REALISTIC_ATLAS` optical shader uses **narrow, directional,
+low-energy contact arcs** rather than bright outlines around the whole droplet.
+A softened refraction gain avoids exaggerated refracted bright shelf edges.
+After applying the follow-up patch, rerun `scripts/blender_optical_water_gallery.py`
+on the same photo and compare `06_optical_off.png` vs `07_optical_on.png`;
+`08_optical_restored.png` should still be exactly the OFF render.
+This does not change Alpha/Height/Normal atlas pixels, masks, or YOLO export.
+A realistic look still requires visual approval on your freezer photo.

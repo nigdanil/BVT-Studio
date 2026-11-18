@@ -281,6 +281,11 @@ def build_hybrid_shader(obj, nodes, links, output, tex):
 
     glass_mask = _combined_glass_mask(obj, nodes, links, tex.outputs['UV'])
 
+    # Optional alpha.5-step3 optics only for the generated realistic atlas.
+    # Existing procedural/photo-map shaders retain their exact original graph.
+    from .optical_water import optical_enabled, optical_sockets
+    optical = optical_enabled(obj)
+
     x = _math(nodes, links, 'SUBTRACT', 'BVT_Hybrid_Normal_X', left=gx, constant=.5)
     y = _math(nodes, links, 'SUBTRACT', 'BVT_Hybrid_Normal_Y', left=gy, constant=.5)
     glint_x = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Glint_X', left=x, constant=-1.28)
@@ -317,6 +322,20 @@ def build_hybrid_shader(obj, nodes, links, output, tex):
     dark_alpha = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Dark_Relief', left=dark_alpha, right=relief_amount)
     dark_alpha = _math(nodes, links, 'MULTIPLY', 'BVT_Hybrid_Dark_Contrast', left=dark_alpha, constant=1.18)
     dark_alpha = _math(nodes, links, 'MINIMUM', 'BVT_Hybrid_Dark_Clamp', left=dark_alpha, constant=.22)
+
+    if optical:
+        optical_hi, optical_shadow, optical_micro = optical_sockets(
+            obj, nodes, links, x, y, height, glass_mask)
+        highlight_alpha = _math(nodes, links, 'ADD', 'BVT_Optical_Highlight_Sum',
+                                left=highlight_alpha, right=optical_hi)
+        highlight_alpha = _math(nodes, links, 'ADD', 'BVT_Optical_Micro_Specular_Sum',
+                                left=highlight_alpha, right=optical_micro)
+        highlight_alpha = _math(nodes, links, 'MINIMUM', 'BVT_Optical_Highlight_Safe_Clamp',
+                                left=highlight_alpha, constant=.39)
+        dark_alpha = _math(nodes, links, 'ADD', 'BVT_Optical_Shadow_Sum',
+                           left=dark_alpha, right=optical_shadow)
+        dark_alpha = _math(nodes, links, 'MINIMUM', 'BVT_Optical_Shadow_Safe_Clamp',
+                           left=dark_alpha, constant=.28)
 
     transparent = nodes.new('ShaderNodeBsdfTransparent')
     transparent.name = 'BVT_Hybrid_Clear_Glass'
@@ -361,7 +380,24 @@ def build_hybrid_shader(obj, nodes, links, output, tex):
         warp.name = 'BVT_Hybrid_Normal_Refraction'
         warp.operation = 'SCALE'
         links.new(normal_xy.outputs['Vector'], warp.inputs['Vector'])
-        driver_socket(warp.inputs['Scale'], obj, 'bvt_artifact_refraction')
+        if optical:
+            from .optical_water import LENS_KEY
+            # Blend the requested gain toward 1.0. Large refraction warps
+            # made frozen shelf edges look like luminous circular halos.
+            user_gain = _math(nodes, links, 'SUBTRACT',
+                              'BVT_Optical_Refraction_Gain_Offset', constant=1.)
+            driver_socket(user_gain.node.inputs[0], obj, LENS_KEY)
+            delta = _math(nodes, links, 'MULTIPLY',
+                          'BVT_Optical_Refraction_Gain_Softener',
+                          left=user_gain, constant=.35)
+            gain = _math(nodes, links, 'ADD', 'BVT_Optical_Refraction_SoftGain',
+                         left=delta, constant=1.)
+            lens_scale = _math(nodes, links, 'MULTIPLY',
+                               'BVT_Optical_Refraction_Gain', right=gain)
+            driver_socket(lens_scale.node.inputs[0], obj, 'bvt_artifact_refraction')
+            links.new(lens_scale, warp.inputs['Scale'])
+        else:
+            driver_socket(warp.inputs['Scale'], obj, 'bvt_artifact_refraction')
         uv = nodes.new('ShaderNodeVectorMath')
         uv.name = 'BVT_Hybrid_Photo_UV_Warp'
         uv.operation = 'ADD'

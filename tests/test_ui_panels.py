@@ -19,7 +19,8 @@ EXPECTED = {
                                       'assign_precision_mask', 'toggle_precision_mask',
                                       'assign_droplet_maps', 'use_droplet_photos',
                                       'use_droplet_procedural', 'generate_realistic_atlas',
-                                      'use_realistic_atlas'),
+                                      'use_realistic_atlas', 'apply_optical_water',
+                                      'disable_optical_water'),
     'BVTSTUDIO_PT_annotations': (
         'add_annotation', 'register_annotations', 'renumber', 'toggle_preview',
         'refresh_annotation_list', 'select_all_annotations',
@@ -102,7 +103,7 @@ class TestCollapsibleSidebar(unittest.TestCase):
                 self.assertCountEqual(found, ['bvt_studio.' + name for name in expected])
             all_ids.extend(found)
         self.assertEqual(len(all_ids), len(set(all_ids)), Counter(all_ids))
-        self.assertEqual(len(all_ids), 33)
+        self.assertEqual(len(all_ids), 35)
         self.assertEqual(operator_ids(classes['BVTSTUDIO_PT_main']), [])
 
     def test_existing_properties_and_lists_still_available(self):

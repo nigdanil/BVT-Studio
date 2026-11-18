@@ -156,6 +156,22 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Streaks', default=0.35, min=0.0, max=1.0,
         description='Amount of gravity-aligned trails and elongated drops',
     )
+    optical_lens_gain: FloatProperty(
+        name='Optical Lens', default=1.45, min=.25, max=2.5,
+        description='Optical refraction multiplier for Realistic Atlas only',
+    )
+    optical_edge_gain: FloatProperty(
+        name='Contact Shadow', default=1.0, min=0., max=2.5,
+        description='Directional dark contact-line rim on water droplets',
+    )
+    optical_glint_gain: FloatProperty(
+        name='Contact Highlight', default=1.25, min=0., max=2.5,
+        description='Directional bright edge glints from alpha/normal maps',
+    )
+    optical_micro_gain: FloatProperty(
+        name='Micro Glints', default=.35, min=0., max=1.,
+        description='Limit tiny bead glints without hiding product labels',
+    )
     artifact_seed: IntProperty(
         name='Seed', default=42, min=0, max=2147483647,
         description='Deterministic microstructure seed for the selected glass plane',
