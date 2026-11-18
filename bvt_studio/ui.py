@@ -193,6 +193,16 @@ class BVTSTUDIO_PT_glass_artifacts(_StudioChild, bpy.types.Panel):
             row = layout.row(align=True)
             row.operator('bvt_studio.use_droplet_procedural', text='Procedural')
             row.operator('bvt_studio.use_droplet_photos', text='Photo Maps')
+        layout.separator()
+        layout.label(text='Generated Realistic Droplet Atlas:', icon='MOD_FLUIDSIM')
+        layout.prop(settings, 'realistic_atlas_resolution')
+        layout.prop(settings, 'realistic_atlas_density', slider=True)
+        layout.prop(settings, 'realistic_atlas_streaks', slider=True)
+        layout.operator('bvt_studio.generate_realistic_atlas',
+                        text='Generate & Pack Atlas', icon='TEXTURE')
+        if droplet_target and droplet_target.get('bvt_role') == 'glass_overlay':
+            layout.operator('bvt_studio.use_realistic_atlas',
+                            text='Use Saved Realistic Atlas', icon='CHECKMARK')
         layout.operator('bvt_studio.apply_glass_preset',
                         text='Apply Glass Preset', icon='CHECKMARK')
         layout.operator('bvt_studio.refresh_glass_pattern',

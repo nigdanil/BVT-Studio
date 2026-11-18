@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0-alpha.5-step2 — 2026-11-18
+
+- Add `REALISTIC_ATLAS` as a third independent glass droplet source: procedurally
+  generated multi-scale Alpha/Height/OpenGL-Normal PNG triplets (synthetic, **not photographs**).
+- Generate irregular lens-cap beads, dense micro-droplets and downward trails with
+  explicit Seed, Resolution, Density and Streaks controls in the Blender sidebar.
+- Pack generated atlas maps into `.blend` per glass without overwriting imported
+  `PHOTO_MAPS`; keep `PROCEDURAL` available and Precision Mask final gating unchanged.
+- Add three-mode Blender visual comparison, PNG atlas previews and packed-map
+  persistence checks. No changes to YOLO annotation or export modules.
+
+
 ## 0.4.0-alpha.5-step1 — 2026-11-17
 
 - Support three user-supplied photographic droplet PNG maps (Alpha/Height/OpenGL Normal) per glass.
@@ -155,3 +167,7 @@
 ## 0.1.0 — 2026-11-16
 
 - Initial 2.5D photo setup, user-authored glass overlay material, colored YOLO Plane boxes, validation and single-image export.
+
+- alpha.5-step2 QA persistence fix: keep packed inactive PHOTO_MAPS and
+  REALISTIC_ATLAS images alive via Blender Fake User, so Save/Open does not
+  discard the currently unused bank; regression and persistence checks added.

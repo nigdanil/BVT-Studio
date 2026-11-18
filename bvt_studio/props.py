@@ -142,6 +142,20 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         name='Map Rotation', default=0.0, min=-180.0, max=180.0,
         description='Map orientation for imported droplets in degrees',
     )
+    realistic_atlas_resolution: EnumProperty(
+        name='Atlas Resolution', items=[('256', '256 px', 'Fast preview'),
+                                        ('512', '512 px', 'Balanced'),
+                                        ('1024', '1024 px', 'Detailed')], default='512',
+        description='Resolution of each of the three generated maps',
+    )
+    realistic_atlas_density: FloatProperty(
+        name='Atlas Density', default=1.0, min=0.25, max=2.0,
+        description='Count of micro beads and larger drops, not overall glass mask',
+    )
+    realistic_atlas_streaks: FloatProperty(
+        name='Streaks', default=0.35, min=0.0, max=1.0,
+        description='Amount of gravity-aligned trails and elongated drops',
+    )
     artifact_seed: IntProperty(
         name='Seed', default=42, min=0, max=2147483647,
         description='Deterministic microstructure seed for the selected glass plane',

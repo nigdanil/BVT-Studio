@@ -262,7 +262,7 @@ def build_hybrid_shader(obj, nodes, links, output, tex):
     from .glass_realism import image_uv_bounds, source_for_glass
 
     from .droplet_maps import MODE_KEY, droplet_photo_channels
-    if obj.get(MODE_KEY, 'PROCEDURAL') == 'PHOTO_MAPS':
+    if obj.get(MODE_KEY, 'PROCEDURAL') == 'PHOTO_MAPS' or obj.get(MODE_KEY) == 'REALISTIC_ATLAS':
         height, gx, gy, wet_film = droplet_photo_channels(
             obj, nodes, links, tex.outputs['UV'])
     else:

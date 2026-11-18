@@ -7,21 +7,26 @@ The existing precision mask gates the final surface after the droplet shader.
 from math import cos, isfinite, radians, sin
 from pathlib import Path
 
-MODES = frozenset({'PROCEDURAL', 'PHOTO_MAPS'})
+MODES = frozenset({'PROCEDURAL', 'PHOTO_MAPS', 'REALISTIC_ATLAS'})
 KINDS = ('alpha', 'height', 'normal')
 MODE_KEY = 'bvt_droplet_source_mode'
 TILING_KEY = 'bvt_droplet_map_tiling'
 ROTATION_KEY = 'bvt_droplet_map_rotation'
 
 
-def image_key(kind):
+def image_key(kind, mode='PHOTO_MAPS'):
     if kind not in KINDS:
         raise ValueError('Unsupported droplet map channel: ' + str(kind))
-    return 'bvt_droplet_' + kind + '_image'
+    if mode not in ('PHOTO_MAPS', 'REALISTIC_ATLAS'):
+        raise ValueError('Invalid droplet map storage mode')
+    prefix = 'bvt_atlas_' if mode == 'REALISTIC_ATLAS' else 'bvt_droplet_'
+    return prefix + kind + '_image'
 
 
-def path_key(kind):
-    return 'bvt_droplet_' + kind + '_path'
+def path_key(kind, mode='PHOTO_MAPS'):
+    if kind not in KINDS or mode not in ('PHOTO_MAPS', 'REALISTIC_ATLAS'):
+        raise ValueError('Invalid droplet map path channel')
+    return ('bvt_atlas_' if mode == 'REALISTIC_ATLAS' else 'bvt_droplet_') + kind + '_path'
 
 
 def check_transform(tiling, rotation):
@@ -40,26 +45,31 @@ def _glass_check(obj):
         raise ValueError('Cannot change linked glass objects')
 
 
-def packed_maps_for(obj):
+def packed_maps_for(obj, mode=None):
     """Fail closed for photo mode; never silently fall back to procedural maps."""
     import bpy
+    mode = mode or obj.get(MODE_KEY, 'PHOTO_MAPS')
+    if mode not in ('PHOTO_MAPS', 'REALISTIC_ATLAS'):
+        raise ValueError('Packed droplet maps are not enabled for this mode')
     result = {}
     for kind in KINDS:
-        name = obj.get(image_key(kind))
+        name = obj.get(image_key(kind, mode))
         image = bpy.data.images.get(str(name)) if name else None
         if image is None or image.source != 'FILE' or min(image.size) < 2 or not image.packed_file:
-            raise ValueError(f'{obj.name}: missing packed {kind} droplet PNG')
+            raise ValueError(f'{obj.name}: missing packed {kind} droplet PNG for {mode}')
         result[kind] = image
     if len({tuple(image.size) for image in result.values()}) != 1:
         raise ValueError('Droplet Alpha/Height/Normal maps must have the same dimensions')
     return result
 
 
-def import_droplet_maps(obj, alpha_path, height_path, normal_path, tiling=1., rotation=0.):
+def import_droplet_maps(obj, alpha_path, height_path, normal_path, tiling=1., rotation=0., target_mode='PHOTO_MAPS'):
     """Atomically assign independent packed PNG datablocks to one Glass Plane."""
     import bpy
     _glass_check(obj)
     check_transform(tiling, rotation)
+    if target_mode not in ('PHOTO_MAPS', 'REALISTIC_ATLAS'):
+        raise ValueError('Invalid map import target')
     paths = dict(zip(KINDS, (alpha_path, height_path, normal_path)))
     fullpaths = {}
     for kind, path in paths.items():
@@ -70,7 +80,7 @@ def import_droplet_maps(obj, alpha_path, height_path, normal_path, tiling=1., ro
     if len(set(fullpaths.values())) != 3:
         raise ValueError('Alpha, Height and Normal require three distinct PNGs')
 
-    all_keys = tuple(image_key(k) for k in KINDS) + tuple(path_key(k) for k in KINDS) + (
+    all_keys = tuple(image_key(k, target_mode) for k in KINDS) + tuple(path_key(k, target_mode) for k in KINDS) + (
         MODE_KEY, TILING_KEY, ROTATION_KEY,
     )
     previous = {key: obj.get(key) for key in all_keys}
@@ -83,26 +93,36 @@ def import_droplet_maps(obj, alpha_path, height_path, normal_path, tiling=1., ro
                 raise ValueError(f'{kind}: invalid PNG or dimensions')
             image.colorspace_settings.name = 'Non-Color'
             image.alpha_mode = 'CHANNEL_PACKED'
-            image.name = 'BVT_Droplet_' + kind + '_' + str(obj.get('bvt_glass_uid', obj.name))[:20]
+            image.name = ('BVT_Atlas_' if target_mode == 'REALISTIC_ATLAS' else 'BVT_Droplet_') + kind + '_' + str(obj.get('bvt_glass_uid', obj.name))[:20]
             image.pack()
             if not image.packed_file:
                 raise RuntimeError(f'{kind}: could not pack image into .blend')
+            # The map bank not selected in the active material has zero shader
+            # users. Packing stores pixels but does NOT protect an orphan ID
+            # across Save/Open. Fake User preserves both PHOTO_MAPS and atlas.
+            image.use_fake_user = True
         if len({tuple(image.size) for image in created.values()}) != 1:
             raise ValueError('Alpha/Height/Normal maps must have identical dimensions')
         for kind, image in created.items():
-            obj[image_key(kind)] = image.name
-            obj[path_key(kind)] = str(fullpaths[kind])
-        obj[MODE_KEY] = 'PHOTO_MAPS'
+            obj[image_key(kind, target_mode)] = image.name
+            obj[path_key(kind, target_mode)] = ('generated://realistic_atlas/' + kind if target_mode == 'REALISTIC_ATLAS' else str(fullpaths[kind]))
+        if target_mode == 'PHOTO_MAPS':
+            obj[MODE_KEY] = 'PHOTO_MAPS'
+        else:
+            obj[MODE_KEY] = 'REALISTIC_ATLAS'
         obj[TILING_KEY] = float(tiling)
         obj[ROTATION_KEY] = float(rotation)
         from .glass import configure_glass
         configure_glass(obj)
         # Old images remain untouched until the new material is fully valid.
         for kind in KINDS:
-            old_name = previous.get(image_key(kind))
-            if old_name and old_name != obj[image_key(kind)]:
+            old_name = previous.get(image_key(kind, target_mode))
+            if old_name and old_name != obj[image_key(kind, target_mode)]:
                 old_image = bpy.data.images.get(str(old_name))
-                if old_image and old_image.users == 0 and old_image.name.startswith('BVT_Droplet_'):
+                # Replacing a map must still release the old orphan image;
+                # Blender counts its fake user in ID.users on some versions.
+                if (old_image and old_image.users <= int(old_image.use_fake_user)
+                        and old_image.name.startswith(('BVT_Droplet_', 'BVT_Atlas_'))):
                     bpy.data.images.remove(old_image)
     except Exception:
         for key, old in previous.items():
@@ -118,7 +138,7 @@ def import_droplet_maps(obj, alpha_path, height_path, normal_path, tiling=1., ro
         except Exception:
             pass
         for image in created.values():
-            if image.users == 0:
+            if image.users <= int(image.use_fake_user):
                 bpy.data.images.remove(image)
         raise
     return created
@@ -131,8 +151,8 @@ def set_droplet_mode(obj, mode, tiling=None, rotation=None):
     tile = float(obj.get(TILING_KEY, 1.) if tiling is None else tiling)
     angle = float(obj.get(ROTATION_KEY, 0.) if rotation is None else rotation)
     check_transform(tile, angle)
-    if mode == 'PHOTO_MAPS':
-        packed_maps_for(obj)
+    if mode in ('PHOTO_MAPS', 'REALISTIC_ATLAS'):
+        packed_maps_for(obj, mode=mode)
     old = {key: obj.get(key) for key in (MODE_KEY, TILING_KEY, ROTATION_KEY)}
     try:
         obj[MODE_KEY], obj[TILING_KEY], obj[ROTATION_KEY] = mode, tile, angle
@@ -173,7 +193,7 @@ def droplet_photo_channels(obj, nodes, links, glass_uv):
     UV transform is stable for each glass and works for rotated photo planes.
     """
     from .artifact_config import seed_offsets
-    maps = packed_maps_for(obj)
+    maps = packed_maps_for(obj, mode=obj.get(MODE_KEY, 'PHOTO_MAPS'))
     tiling = float(obj.get(TILING_KEY, 1.))
     rotation = float(obj.get(ROTATION_KEY, 0.))
     check_transform(tiling, rotation)

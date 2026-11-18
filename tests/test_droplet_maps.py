@@ -39,12 +39,12 @@ class PhotoDropletMapsTests(unittest.TestCase):
 
     def test_import_packs_independent_images_and_fails_closed(self):
         src = MAPS.read_text(encoding='utf-8')
-        for name in ('check_existing=False', 'image.pack()', 'packed_maps_for(obj)',
+        for name in ('check_existing=False', 'image.pack()', 'packed_maps_for(obj, mode=mode)',
                      "obj[MODE_KEY] = 'PHOTO_MAPS'", "image.colorspace_settings.name = 'Non-Color'",
                      "image.alpha_mode = 'CHANNEL_PACKED'", 'identical dimensions'):
             self.assertIn(name, src)
         self.assertIn('if not image.packed_file', src)
-        self.assertIn('if image.users == 0', src)
+        self.assertIn('image.users <= int(image.use_fake_user)', src)
         self.assertNotIn('bpy.ops.object.', src)
 
     def test_true_alpha_height_normal_and_seed_uv(self):
@@ -74,8 +74,8 @@ class PhotoDropletMapsTests(unittest.TestCase):
         init = (ROOT/'bvt_studio/__init__.py').read_text(encoding='utf-8')
         ui = (ROOT/'bvt_studio/ui.py').read_text(encoding='utf-8')
         props = (ROOT/'bvt_studio/props.py').read_text(encoding='utf-8')
-        self.assertIn('alpha.5-step1', init)
-        self.assertIn('droplet_maps)', init)
+        self.assertIn('alpha.5-step2', init)
+        self.assertIn('droplet_maps, realistic_atlas)', init)
         for key in ('droplet_alpha_path','droplet_height_path','droplet_normal_path',
                     'droplet_map_tiling','droplet_map_rotation'):
             self.assertIn(key, ui)

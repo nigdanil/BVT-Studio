@@ -1,4 +1,4 @@
-# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.5-step1
+# BVT Studio — 2.5D Dataset Builder v0.4.0-alpha.5-step2
 
 **Experimental standalone Blender 5.2+ add-on**, built from the seven BVT prototype Python scripts.
 No external dependencies beyond Blender's included Python API.
@@ -530,3 +530,61 @@ Run the Blender visual gate with your own source photo:
 ```
 
 Do not accept visual quality until you run this with suitable real photo maps.
+
+
+## alpha.5-step2 — Generated Realistic Droplet Atlas
+
+BVT Studio now supports **three source modes** per `Glass_p_*`:
+`PROCEDURAL` (legacy), `PHOTO_MAPS` (real user PNGs) and `REALISTIC_ATLAS`
+(generated synthetic maps). The last mode samples the same packed
+Alpha/Height/OpenGL Normal pathway as `PHOTO_MAPS` while preserving
+**separate image datablocks** for each mode. This is a more varied synthetic
+approximation, **not photographic water or verified photorealistic output**.
+
+In Blender 5.2+ open **N → BVT Studio → Glass Artifact Engine**. Select
+Glass Target and preset `LIGHT_CONDENSATION` or `HEAVY_CONDENSATION`; choose
+Atlas Resolution (256/512/1024), Density (0.25–2.0), Streaks (0–1), and
+Seed. Click **Generate & Pack Atlas**. For switching to previously generated
+maps use **Use Saved Realistic Atlas**; previously imported maps remain
+accessible through **Photo Maps**, or use **Procedural** for the original atlas.
+All generated maps and their provenance parameters are stored in `.blend`.
+Existing per-glass Precision PNG Masks still gate the final shader.
+
+Blender headless visual QA from repository root, Git Bash:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python-exit-code 1 \
+  --python scripts/blender_realistic_droplet_atlas_gallery.py -- \
+  --photo "C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png" \
+  --output "D:/BVT-Studio/qa_renders/realistic_droplets_step2" --save-blend
+```
+
+Produces `01_procedural.png`, `02_photo_maps.png` (test synthetic maps),
+`03_realistic_atlas.png`, `04_atlas_seed73.png` and
+`05_realistic_masked.png`; also writes full grayscale Alpha/Height RGB
+normal previews (`atlas_alpha.png`, etc) and `realistic_atlas_manifest.json`.
+A saved `.blend` is optional. To verify its packed maps after reopening:
+
+```bash
+"/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
+  --background --factory-startup --python-exit-code 1 \
+  --python scripts/blender_realistic_atlas_persistence_smoke.py -- \
+  --blend "D:/BVT-Studio/qa_renders/realistic_droplets_step2/realistic_droplets_smoke.blend"
+```
+
+Atlas textures are synthesized in Blender from seeded NumPy arrays, requiring
+no third-party models. They do not segment the refrigerator frame or alter
+YOLO labels; supply Precision Masks to exclude metal. For dataset use, review
+photographic realism, class-label legibility and source similarity visually.
+
+### alpha.5-step2 — Inactive packed map persistence fix
+
+Blender can drop image datablocks that are no longer used by any material, even
+if their pixels were packed. Both the PHOTO_MAPS and REALISTIC_ATLAS image banks
+now set Image.use_fake_user=True on import. This preserves the inactive bank in
+the saved .blend; replacement and rollback remove orphaned old images correctly.
+
+Existing smoke .blend files created before this fix may already have lost the
+inactive map bank. **Rerun blender_realistic_droplet_atlas_gallery.py with
+--save-blend** to regenerate and save both banks, then rerun the persistence smoke.
