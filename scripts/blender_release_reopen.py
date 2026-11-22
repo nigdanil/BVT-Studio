@@ -32,6 +32,7 @@ def inspect(scene, manifest, relocate=False):
     for i,(g,p) in enumerate(zip(glasses,manifest['panes']),1):
         check(bool(g.get('bvt_glass_mask_enabled')),g.name+': mask disabled')
         mask=mask_image_for(g); check(mask is not None and mask.packed_file,g.name+': mask not packed')
+        check(mask.use_fake_user,g.name+': mask persistence flag missing')
         rel=f'//masks/mask_glass_{i:03}.png'
         if relocate: mask.filepath=rel; g[MASK_PATH_KEY]=rel
         packed.add(mask.name)

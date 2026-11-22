@@ -48,6 +48,9 @@ def load_mask_for_glass(obj, filepath):
         image.pack()
         if not image.packed_file:
             raise RuntimeError('Mask image could not be packed into the .blend')
+        # Preserve packed masks even when no shader node uses them.
+        # Required for QA_TRANSPARENT and disabled masks.
+        image.use_fake_user = True
         old = {key: obj.get(key) for key in (MASK_IMAGE_KEY, MASK_PATH_KEY, MASK_ENABLED_KEY)}
         try:
             obj[MASK_IMAGE_KEY] = image.name

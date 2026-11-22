@@ -22,7 +22,7 @@ class PrecisionMaskQA(unittest.TestCase):
         source = (ROOT / 'bvt_studio' / 'glass_mask.py').read_text('utf-8')
         ast.parse(source)
         for phrase in ('MASK_IMAGE_KEY', 'MASK_PATH_KEY', 'MASK_ENABLED_KEY',
-                       'check_existing=False', 'image.pack()', 'image.packed_file',
+                       'check_existing=False', 'image.pack()', 'image.packed_file', 'image.use_fake_user = True',
                        "colorspace_settings.name = 'Non-Color'", 'ShaderNodeRGBToBW',
                        'ShaderNodeTexImage', "sample.extension = 'CLIP'",
                        'BVT_Precision_Final_Mask_Gate', 'BVT_Precision_QA_Mask',
