@@ -1,0 +1,19 @@
+{
+  "schema": "bvt.glass-gallery.v02",
+  "defaults": {},
+  "glass": {
+    "Glass_p_001": {
+      "preset": "CLEAN",
+      "intensity": 1.0,
+      "coverage": 0.0,
+      "seed": 72,
+      "refraction": 0.032,
+      "relief": 1.0,
+      "water": null,
+      "optics": {
+        "enabled": false
+      },
+      "stress": false
+    }
+  }
+}

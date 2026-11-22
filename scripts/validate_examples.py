@@ -13,6 +13,7 @@ MODES = ('00_clean','01_light_condensation','02_heavy_condensation','03_frost',
          '08_running_water_only','09_combined_water_no_optics','10_combined_water_optics',
          '11_heavy_running_water','12_stress_optics')
 WATER = MODES[6:]
+FREEZER_EXTRA_FILES = ('configs/geometry/bvt_freezer_glass_rects_v02_default.json', 'configs/presets/scenes/scene_one_glass_v02.json', 'configs/presets/scenes/scene_two_glasses_v02.json', 'configs/presets/single_glass/README.md', 'configs/presets/single_glass/baseline/00_clean.json', 'configs/presets/single_glass/baseline/13_clean_glass.json', 'configs/presets/single_glass/condensation/01_light_condensation.json', 'configs/presets/single_glass/condensation/02_heavy_condensation.json', 'configs/presets/single_glass/qa/12_stress_optics.json', 'configs/presets/single_glass/surface/03_frost.json', 'configs/presets/single_glass/surface/04_dirty_glass.json', 'configs/presets/single_glass/surface/05_reflections.json', 'configs/presets/single_glass/water/06_microbeads_only.json', 'configs/presets/single_glass/water/07_macro_droplets_only.json', 'configs/presets/single_glass/water/08_running_water_only.json', 'configs/presets/single_glass/water/09_combined_water_no_optics.json', 'configs/presets/single_glass/water/10_combined_water_optics.json', 'configs/presets/single_glass/water/11_heavy_running_water.json')
 
 def sha(path):
     with path.open('rb') as f:
@@ -68,7 +69,29 @@ def validate(base):
     if base.name=='freezer_planogram':
         expected={f'masks/mask_glass_{i:03}.png' for i in range(1,5)} | {f'maps/Glass_p_{i:03}/{k}.png' for i in range(1,5) for k in ('alpha','height','normal')}
         need(seen==expected,'Expected all 4 mask and 12 map PNGs')
-    return dict(manifest=m,image=image,configs=configs,rects=rects,assets=assets)
+    extra_names=m.get('additional_files',[])
+    need(isinstance(extra_names,list) and all(isinstance(x,str) for x in extra_names),'Invalid additional_files')
+    need(len(extra_names)==len(set(extra_names)),'Duplicate additional files')
+    need(not set(extra_names).intersection(m['configs'].values()),'Duplicate config')
+    if base.name=='freezer_planogram':
+        need(set(extra_names)==set(FREEZER_EXTRA_FILES),'Freezer preset catalog incomplete or unexpected')
+    extra_files=[]
+    for rel in extra_names:
+        p=resolve_file(base,rel)
+        need(rel.startswith('configs/') and (p.suffix=='.json' or p.name=='README.md'),'Unexpected additional file')
+        if rel.startswith('configs/presets/') and p.suffix=='.json':
+            doc=read(p)
+            need(isinstance(doc,dict) and doc.get('schema')=='bvt.glass-gallery.v02' and isinstance(doc.get('glass'),dict),'Invalid preset: '+rel)
+            count=2 if p.name=='scene_two_glasses_v02.json' else 1
+            need(set(doc['glass'])=={f'Glass_p_{i:03}' for i in range(1,count+1)},'Preset pane names mismatch: '+rel)
+        elif rel.startswith('configs/geometry/') and p.suffix=='.json':
+            doc=read(p)
+            dims=doc.get('reference_size');rs=doc.get('glass_rectangles')
+            need(dims==list(size) and isinstance(rs,list) and len(rs)==len(rects),'Invalid additional geometry')
+            for r in rs:
+                need(len(r)==4 and all(type(v) is int for v in r) and 0<=r[0]<r[2]<=size[0] and 0<=r[1]<r[3]<=size[1],'Invalid rectangle')
+        extra_files.append(p)
+    return dict(manifest=m,image=image,configs=configs,rects=rects,assets=assets,extra_files=extra_files)
 
 def main():
     p=argparse.ArgumentParser(description=__doc__); p.add_argument('--root',type=Path,default=ROOT/'examples'); a=p.parse_args()

@@ -6,17 +6,9 @@ new demo prerelease tag, e.g. `v0.4.0-alpha.5-demo.1`.
 
 ## Install and check
 
-Extract the patch into the repository (including hidden `.github/`). Run
-`python scripts/install_release_builder.py` from repo root. It validates source
-data, adds `validate_examples.py` to the existing CI and appends a README section.
-It backs up edited files under ignored `qa_renders/patch_backups/`. It removes
-only a byte-identical duplicate `setup_bvt_examples copy.py` if present.
+A fresh clone of current `main` already contains the Release Builder; do not run historical patch installers. Run `python scripts/validate_examples.py` and `python -m unittest discover -s tests -v` with Python 3.12 + NumPy 2.2.6. For isolated rerender validation, see [Post-Merge QA](POST_MERGE_QA.md).
 
-Run `python scripts/validate_examples.py`, then all tests with Blender and/or
-Python 3.12 + NumPy 2.2.6. Review `git diff --check` and stage only intended files.
-Do not commit any asset until its redistribution permission is confirmed.
-`examples/local/`, `qa_renders/` and `dist/` stay ignored. Commit the patch before
-building: release builds require a clean Git tree and record its exact SHA.
+Do not commit assets unless redistribution permission is confirmed. `examples/local/`, `qa_renders/` and `dist/` stay ignored. Release builds require a clean Git tree and record its exact SHA.
 
 ## Build locally on Windows (Git Bash)
 

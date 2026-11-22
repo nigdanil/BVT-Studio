@@ -53,8 +53,7 @@ def check_gallery(gallery, example):
 def example_entries(base, example):
     # Explicit manifest allowlist; never package examples/local or arbitrary .blend files.
     paths=[base/'manifest.json',base/'README.md',base.parent/'README.md',example['image'],*example['configs'].values(),*example['assets']]
-    extra=base/'configs/bvt_freezer_glass_rects_v02_default.json'
-    if extra.is_file(): paths.append(extra)
+    paths.extend(example['extra_files'])
     return [(p,p.relative_to(ROOT).as_posix()) for p in paths]
 
 def gallery_entries(gallery):

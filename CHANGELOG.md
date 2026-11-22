@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0-alpha.5-demo.2 — 2026-11-22
+
+- First public experimental demo: 13 ready-to-open Blender scenes and four release ZIPs.
+- Add macro droplets, microbeads, running water and combined optical profiles, independent glass targets and JSON presets.
+- Calibrate the seven zero-water comparisons against matched neutral atlases.
+- Add self-contained example resources, release builder and source CI validation.
+- Preserve packed precision masks and float OpenEXR condensation atlases across Blender reload; normalize packed image paths.
+- Validated baseline: 193 tests, eight post-merge Blender integration smokes, 13 scene builds/reopens and 13 isolated rerenders on Windows Blender 5.2.3.
+- Experimental synthetic fixture only; real-world accuracy and physical realism remain unvalidated.
+
 ## 0.4.0-alpha.5-step5 — 2026-11-18
 
 - Add target-matched optical Quality Gate v2 with distinct Light / Medium / Heavy
