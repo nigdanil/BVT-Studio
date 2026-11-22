@@ -1,0 +1,15 @@
+{
+  "stage": "v0.2.1",
+  "target_branch": "feature/photorealistic-droplets-v05",
+  "known_base_sha256": "647df147479ba600335783d8e00ca878328beaad35e442ab7fd6f5c01134c0de",
+  "patched_gallery_sha256": "6ac918a017d406a5c73204c4266a9b3fe861f4759cb0cdb35860c8a4301b5056",
+  "files": [
+    "patches/bvt_glass_effect_gallery_v02.py",
+    "scripts/install_water_qa_v021.py",
+    "scripts/check_gallery_v021_outputs.py",
+    "scripts/run_bvt_water_qa_v021.sh",
+    "scripts/blender_gallery_v021_gui_smoke.py",
+    "tests/test_water_qa_calibration_v021.py",
+    "docs/WATER_QA_CALIBRATION_V021.md"
+  ]
+}
