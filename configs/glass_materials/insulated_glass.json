@@ -1,0 +1,39 @@
+{
+  "schema": "bvt.glass-material.v01",
+  "id": "insulated_glass",
+  "title": "Insulated glass unit",
+  "description": "Illustrative two-pane attenuation and weak offset ghost, not ray tracing or thermal simulation.",
+  "status": "EXPERIMENTAL_UNCALIBRATED",
+  "physical_metadata": {
+    "construction": "insulated_two_pane",
+    "layers": 2,
+    "nominal_thickness_mm": 8,
+    "nominal_ior": 1.52
+  },
+  "appearance": {
+    "transmission_rgb": [
+      0.87,
+      0.91,
+      0.94
+    ],
+    "scatter_mix": 0.0,
+    "scatter_radius_fraction": 0.0,
+    "haze_mix": 0.0,
+    "haze_rgb": [
+      0.7,
+      0.7,
+      0.7
+    ],
+    "distortion_fraction": 0.0,
+    "texture_cycles": 12.0,
+    "reflection_mix": 0.07,
+    "reflection_rgb": [
+      0.8,
+      0.85,
+      0.9
+    ],
+    "ghost_mix": 0.19,
+    "ghost_offset_fraction": 0.014,
+    "edge_feather_fraction": 0.025
+  }
+}

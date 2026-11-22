@@ -1,0 +1,39 @@
+{
+  "schema": "bvt.glass-material.v01",
+  "id": "coated_glass",
+  "title": "Coated glass",
+  "description": "Illustrative reflective coating with synthetic illumination band, not environment reflection or low-E calibration.",
+  "status": "EXPERIMENTAL_UNCALIBRATED",
+  "physical_metadata": {
+    "construction": "reflective_coating",
+    "layers": 1,
+    "nominal_thickness_mm": 4,
+    "nominal_ior": 1.52
+  },
+  "appearance": {
+    "transmission_rgb": [
+      0.72,
+      0.79,
+      0.83
+    ],
+    "scatter_mix": 0.0,
+    "scatter_radius_fraction": 0.0,
+    "haze_mix": 0.0,
+    "haze_rgb": [
+      0.7,
+      0.7,
+      0.7
+    ],
+    "distortion_fraction": 0.0,
+    "texture_cycles": 12.0,
+    "reflection_mix": 0.23,
+    "reflection_rgb": [
+      0.72,
+      0.82,
+      0.94
+    ],
+    "ghost_mix": 0.0,
+    "ghost_offset_fraction": 0.0,
+    "edge_feather_fraction": 0.025
+  }
+}
