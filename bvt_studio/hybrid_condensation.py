@@ -3,7 +3,7 @@
 The atlas is a Blender-generated image with four independent data channels:
 R droplet height, G/B encoded tangent slopes, A irregular wet film. NumPy is
 bundled with Blender 5.2; no downloaded image or addon dependency is needed.
-The atlas is a generated datablock stored in the .blend, not a temporary file.
+The generated float atlas is explicitly packed into the .blend as image data.
 """
 from math import isfinite
 
@@ -171,10 +171,24 @@ def ensure_atlas(obj):
                                     alpha=True, float_buffer=True)
         image.alpha_mode = 'CHANNEL_PACKED'
         image.colorspace_settings.name = 'Non-Color'
-    if image.get('bvt_atlas_parameters') != signature:
+    if image.get('bvt_atlas_parameters') != signature or not image.packed_file:
         atlas = make_condensation_atlas(*settings)
+        image.alpha_mode = 'CHANNEL_PACKED'
+        image.colorspace_settings.name = 'Non-Color'
         image.pixels.foreach_set(atlas.ravel())
         image.update()
+        # A generated image ID does not persist its edited pixel buffer by itself.
+        # Do not accept a cached signature without a real packed payload.
+        relative = '//atlases/' + image_name + '.exr'
+        image.filepath_raw = relative
+        image.pack()
+        if not image.packed_file or bytes(image.packed_file.data)[:4] != b'\x76\x2f\x31\x01':
+            raise RuntimeError('Float condensation atlas was not packed as OpenEXR')
+        image.filepath_raw = relative
+        for packed in image.packed_files:
+            packed.filepath = relative
+        image.alpha_mode = 'CHANNEL_PACKED'
+        image.colorspace_settings.name = 'Non-Color'
         image['bvt_atlas_parameters'] = signature
     return image
 
