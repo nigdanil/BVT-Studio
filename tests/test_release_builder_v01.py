@@ -40,4 +40,21 @@ class ReleaseBuilderTests(unittest.TestCase):
             b.zip_files(z,[(f,'demo/a')])
             with ZipFile(z) as out:self.assertEqual(out.read('demo/a'),b'test')
             with self.assertRaises(ValueError):b.zip_files(z,[(f,'same'),(f,'same')])
+    def test_single_glass_catalog_in_release(self):
+        base=ROOT/'examples/freezer_planogram'
+        e=v.validate(base); entries=b.example_entries(base,e)
+        names={name for _,name in entries}
+        presets=[p for p in e['extra_files'] if p.suffix=='.json' and 'single_glass' in p.parts]
+        self.assertEqual(len(presets),14)
+        self.assertTrue(all(set(v.read(p)['glass'])=={'Glass_p_001'} for p in presets))
+        self.assertTrue(all(p.relative_to(ROOT).as_posix() in names for p in e['extra_files']))
+        self.assertEqual(len(names),len(entries))
+
+    def test_missing_preset_catalog_entry_rejected(self):
+        with tempfile.TemporaryDirectory() as t:
+            d=Path(t)/'freezer_planogram';shutil.copytree(ROOT/'examples/freezer_planogram',d)
+            m=v.read(d/'manifest.json');m['additional_files'].pop()
+            (d/'manifest.json').write_text(json.dumps(m))
+            with self.assertRaisesRegex(ValueError,'catalog'):
+                v.validate(d)
 if __name__=='__main__':unittest.main()

@@ -1,0 +1,43 @@
+{
+  "schema": "bvt.glass-gallery.v02",
+  "defaults": {
+    "preset": "HEAVY_CONDENSATION",
+    "intensity": 1.0,
+    "coverage": 0.75,
+    "seed": 72,
+    "refraction": 0.032,
+    "relief": 1.0,
+    "water": {
+      "kind": "MACRO",
+      "resolution": 512,
+      "tiling": 1.0,
+      "params": {
+        "macro_count": 32,
+        "macro_diameter_px": 50
+      }
+    },
+    "optics": {
+      "enabled": true,
+      "lens": 1.45,
+      "edge": 1.0,
+      "glint": 1.25,
+      "micro": 0.35
+    },
+    "stress": false
+  },
+  "glass": {
+    "Glass_p_001": {},
+    "Glass_p_002": {
+      "seed": 73,
+      "water": {
+        "kind": "MICRO",
+        "resolution": 512,
+        "tiling": 1.0,
+        "params": {
+          "micro_count": 1700,
+          "micro_diameter_px": 5.2
+        }
+      }
+    }
+  }
+}

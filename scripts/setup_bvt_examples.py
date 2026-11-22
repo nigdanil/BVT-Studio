@@ -88,6 +88,8 @@ def rewrite_runner(src, boundary, folder, v01=False):
 
 
 def main():
+    if (Path(__file__).resolve().parents[1] / 'examples/freezer_planogram/configs/presets/single_glass').is_dir():
+        raise SystemExit('Examples already organized; run scripts/validate_examples.py instead')
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--repo', type=Path, default=Path.cwd())
     ap.add_argument('--photo', type=Path, help='Original tested PNG; required on first setup')

@@ -51,7 +51,7 @@ def main():
 
     repo=Path(os.environ.get('BVT_REPO_ROOT', str(source_file.parents[3])))
     example=Path(os.environ.get('BVT_EXAMPLE_DIR', str(repo/'examples/freezer_planogram')))
-    config=example/'configs/scene_four_glasses_v02.json'
+    config=example/'configs/presets/scenes/scene_four_glasses_v02.json'
     if not config.is_file():raise FileNotFoundError(config)
     prepared=parse_scene_config(config)
     if set(prepared)!=set(names):

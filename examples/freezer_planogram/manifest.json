@@ -9,9 +9,9 @@
     "provenance": "Original synthetic source PNG, recovered from packed 00_clean/scene.blend; SHA-256 matches the v0.2.1 gallery manifest."
   },
   "configs": {
-    "rectangles": "configs/bvt_freezer_glass_rects_1672x941.json",
-    "gallery": "configs/effects_gallery_v02.json",
-    "scene": "configs/scene_four_glasses_v02.json"
+    "rectangles": "configs/geometry/bvt_freezer_glass_rects_1672x941.json",
+    "gallery": "configs/gallery/effects_gallery_v02.json",
+    "scene": "configs/presets/scenes/scene_four_glasses_v02.json"
   },
   "assets": {
     "provenance": "Generated test assets from v0.2.1 / 10_combined_water_optics; not real glass ground truth.",
@@ -83,5 +83,25 @@
     ]
   },
   "labels": null,
-  "license_note": "User-supplied project asset; verify redistribution permission before publishing."
+  "license_note": "User-supplied project asset; verify redistribution permission before publishing.",
+  "additional_files": [
+    "configs/geometry/bvt_freezer_glass_rects_v02_default.json",
+    "configs/presets/scenes/scene_one_glass_v02.json",
+    "configs/presets/scenes/scene_two_glasses_v02.json",
+    "configs/presets/single_glass/README.md",
+    "configs/presets/single_glass/baseline/00_clean.json",
+    "configs/presets/single_glass/baseline/13_clean_glass.json",
+    "configs/presets/single_glass/condensation/01_light_condensation.json",
+    "configs/presets/single_glass/condensation/02_heavy_condensation.json",
+    "configs/presets/single_glass/qa/12_stress_optics.json",
+    "configs/presets/single_glass/surface/03_frost.json",
+    "configs/presets/single_glass/surface/04_dirty_glass.json",
+    "configs/presets/single_glass/surface/05_reflections.json",
+    "configs/presets/single_glass/water/06_microbeads_only.json",
+    "configs/presets/single_glass/water/07_macro_droplets_only.json",
+    "configs/presets/single_glass/water/08_running_water_only.json",
+    "configs/presets/single_glass/water/09_combined_water_no_optics.json",
+    "configs/presets/single_glass/water/10_combined_water_optics.json",
+    "configs/presets/single_glass/water/11_heavy_running_water.json"
+  ]
 }

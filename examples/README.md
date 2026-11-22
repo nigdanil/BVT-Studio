@@ -13,3 +13,5 @@ canonical regression configurations in `configs/`, and generated results in
   default output. Use absolute paths for overrides.
 - Only commit images and assets you have permission to redistribute. Do not
   commit customer photos, full training datasets, or generated galleries.
+
+For the JSON catalog see [freezer_planogram](freezer_planogram/README.md). Only `configs/presets/` files are intended for manual preset import.
