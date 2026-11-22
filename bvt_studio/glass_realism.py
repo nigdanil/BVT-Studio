@@ -46,7 +46,8 @@ def source_for_glass(obj):
             source = get_source(scene)
             image = image_from_mesh(source) if source is not None else None
             if image is not None and image_uv_bounds(source) is not None:
-                return source, image
+                from .glass_material_blender import effective_source_image
+                return source, effective_source_image(source, image)
     return None, None
 
 

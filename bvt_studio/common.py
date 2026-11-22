@@ -69,6 +69,12 @@ def image_from_mesh(obj):
     for slot in obj.material_slots:
         mat = slot.material
         if mat is not None and mat.use_nodes:
+            # Keep dataset/export source provenance on the immutable original.
+            original = mat.node_tree.nodes.get('BVT_Material_Original')
+            if (obj.get('bvt_role') == 'planogram_image' and original is not None
+                    and original.type == 'TEX_IMAGE' and original.image is not None
+                    and original.get('bvt_material_original_v01') == 1):
+                return original.image
             for node in mat.node_tree.nodes:
                 if node.type == 'TEX_IMAGE' and node.image is not None:
                     return node.image
