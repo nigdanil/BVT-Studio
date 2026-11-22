@@ -1,0 +1,18 @@
+{
+  "patch": "BVT Studio Glass Gallery v0.2",
+  "base_commit": "8934f24",
+  "branch": "feature/photorealistic-droplets-v05",
+  "files": {
+    "bvt_studio/glass_v02_ui.py": "049de602351571f071c538b8da36c53bd463bd71c76ea5c48cbc485d462c0726",
+    "bvt_studio/water_effects_v02.py": "86a7e600817f2331cbe7f4a4054709a853bffa7ea42adfb38393402842b2f436",
+    "configs/bvt_freezer_glass_rects_v02_default.json": "1f0157e66e93e483a017ac8869196125d8da10640fc2aae34edd0070e7881196",
+    "configs/effects_gallery_v02.json": "599ea1cbb684920fd28c926f3d07d2886a4bfdc389373be2cf68561dd03e0ca1",
+    "configs/scene_four_glasses_v02.json": "9469a7b150b38097e674b2b136a2faf698120a6f7d4b262f6ba39839209fcb4a",
+    "docs/GLASS_GALLERY_V02.md": "a8767a95439f7b3824eec6092672b6435da64072792e2ec43274efed217d90aa",
+    "scripts/blender_gallery_v02_persistence.py": "1a043cc4d1dfb913face06df8dc6fcafe514c0cedf89dbcdb7dea34930120e6e",
+    "scripts/bvt_glass_effect_gallery_v02.py": "647df147479ba600335783d8e00ca878328beaad35e442ab7fd6f5c01134c0de",
+    "scripts/install_gallery_v02.py": "a6f03a389381dc3cee2e6774471c9d1faaf755ba30fc8bd9588e35e082099d1b",
+    "scripts/run_bvt_glass_gallery_v02.sh": "6cd68284391f1bf41e834632022903f53e0a0012833ce1ce1ed62c0b9f09ef8a",
+    "tests/test_water_gallery_v02.py": "707e35e961fd50cc3c4a23661c7881a2648cef12fd7f147de5c4453633b52b0f"
+  }
+}

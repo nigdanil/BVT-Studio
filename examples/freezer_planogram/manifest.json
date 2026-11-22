@@ -1,0 +1,87 @@
+{
+  "schema": "bvt.example.v1",
+  "id": "freezer_planogram",
+  "source": {
+    "path": "images/BVT_Freezer_Planogram_16x9_v11_eng.png",
+    "width": 1672,
+    "height": 941,
+    "sha256": "c3dd40d774eec1c3571866ab56b1c418f4665f783fa99d2b8dcef4da01972b30",
+    "provenance": "Original synthetic source PNG, recovered from packed 00_clean/scene.blend; SHA-256 matches the v0.2.1 gallery manifest."
+  },
+  "configs": {
+    "rectangles": "configs/bvt_freezer_glass_rects_1672x941.json",
+    "gallery": "configs/effects_gallery_v02.json",
+    "scene": "configs/scene_four_glasses_v02.json"
+  },
+  "assets": {
+    "provenance": "Generated test assets from v0.2.1 / 10_combined_water_optics; not real glass ground truth.",
+    "files": [
+      {
+        "path": "maps/Glass_p_001/alpha.png",
+        "sha256": "6575db85f41bca1b5e08326d43cca798204729535eeb1c02387f43cf64b5b8c8"
+      },
+      {
+        "path": "maps/Glass_p_001/height.png",
+        "sha256": "23f66cd31c63427af8af38a50a2954230ffbed3fd2ba834c6335475d2cd15c9a"
+      },
+      {
+        "path": "maps/Glass_p_001/normal.png",
+        "sha256": "c6840533bfcc2e1acf9a26dcb72976245d248d49d707d3a6423148e096735313"
+      },
+      {
+        "path": "maps/Glass_p_002/alpha.png",
+        "sha256": "d3f84a02f7915da42951cf4bcc9257205e85776e75b25d02dfba56b2cabf71fb"
+      },
+      {
+        "path": "maps/Glass_p_002/height.png",
+        "sha256": "9e67fcf94d153bfded8614737f52af705c96493193b73328869bd5e83b0daca7"
+      },
+      {
+        "path": "maps/Glass_p_002/normal.png",
+        "sha256": "e38ab215aae9cb3c3dc9fc24a02a6f4aab3acff794f33ca8fd11a592a562dd28"
+      },
+      {
+        "path": "maps/Glass_p_003/alpha.png",
+        "sha256": "c642143a1a8f32957e3187e7898201aac27b00558551b3c6e71962da396400f9"
+      },
+      {
+        "path": "maps/Glass_p_003/height.png",
+        "sha256": "86e5b3dce87acb77bf2600b6e2aa73dfaa20a3e4781d788c4de3a64818465e4b"
+      },
+      {
+        "path": "maps/Glass_p_003/normal.png",
+        "sha256": "14e89b600e971d8544af25be029b6d017db099a5967eef74cc0ff986b19982c7"
+      },
+      {
+        "path": "maps/Glass_p_004/alpha.png",
+        "sha256": "8191397666274a98051ab22dc4b94a32233da52dcc4ea24ffc882149b3a39b85"
+      },
+      {
+        "path": "maps/Glass_p_004/height.png",
+        "sha256": "5bcc9881392eb667b2a80820f30fc31ad4b9274f8916a22ee1e751da6349ce86"
+      },
+      {
+        "path": "maps/Glass_p_004/normal.png",
+        "sha256": "bc96619fdf87148a2972b22e40edb917ca25406dd73afdeb5f68cbece6e57861"
+      },
+      {
+        "path": "masks/mask_glass_001.png",
+        "sha256": "2c086afdfd71ff604551c159ee118bdc81087d53ca8c29fea580bf0f42914219"
+      },
+      {
+        "path": "masks/mask_glass_002.png",
+        "sha256": "2c086afdfd71ff604551c159ee118bdc81087d53ca8c29fea580bf0f42914219"
+      },
+      {
+        "path": "masks/mask_glass_003.png",
+        "sha256": "2c086afdfd71ff604551c159ee118bdc81087d53ca8c29fea580bf0f42914219"
+      },
+      {
+        "path": "masks/mask_glass_004.png",
+        "sha256": "2c086afdfd71ff604551c159ee118bdc81087d53ca8c29fea580bf0f42914219"
+      }
+    ]
+  },
+  "labels": null,
+  "license_note": "User-supplied project asset; verify redistribution permission before publishing."
+}

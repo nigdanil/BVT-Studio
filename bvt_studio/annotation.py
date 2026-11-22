@@ -4,6 +4,7 @@ import json
 import re
 import uuid
 from pathlib import Path
+from .export_preview import label_text, portable_data_yaml, svg_from_labels
 from bpy_extras.object_utils import world_to_camera_view
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
@@ -116,6 +117,7 @@ def collect_boxes(scene):
     cam = scene.camera
     if cam is None or cam.type != 'CAMERA':
         return boxes, ['No active scene camera'], classes
+    depsgraph = bpy.context.evaluated_depsgraph_get()
     objects = [obj for obj in scene_annotations(scene) if obj.get('bvt_enabled', True)]
     if not objects:
         return boxes, ['No enabled annotation planes'], classes
@@ -131,8 +133,10 @@ def collect_boxes(scene):
         if not obj.data.vertices:
             issues.append(f'{obj.name}: empty mesh')
             continue
-        # A plane may contain more vertices; bounding box of projected mesh is used.
-        ndc = [world_to_camera_view(scene, cam, obj.matrix_world @ v.co)
+        # Use original vertices (not Wireframe-modified geometry), but the
+        # evaluated object transform so constraints and YOLO export agree.
+        evaluated_matrix = obj.evaluated_get(depsgraph).matrix_world
+        ndc = [world_to_camera_view(scene, cam, evaluated_matrix @ v.co)
                for v in obj.data.vertices]
         if any(p.z <= 0 for p in ndc):
             issues.append(f'{obj.name}: plane behind camera')
@@ -179,6 +183,10 @@ class BVTSTUDIO_OT_add_annotation(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        settings = context.scene.bvt_studio
+        if settings.scene_locks_enabled and not settings.annotations_edit_enable:
+            self.report({'WARNING'}, 'Enable Annotations Edit before adding a box')
+            return {'CANCELLED'}
         source = get_source(context.scene)
         if source is None:
             self.report({'ERROR'}, 'First set a source Image Plane')
@@ -207,9 +215,13 @@ class BVTSTUDIO_OT_add_annotation(bpy.types.Operator):
         obj.matrix_world = source.matrix_world @ Matrix.Translation((0, 0, signed * 0.03))
         configure_outline(obj, len(scene_annotations(context.scene)) - 1,
                           bool(context.scene.get(PREVIEW_PROP, False)))
+        from .scene_lock import apply_scene_locks
+        apply_scene_locks(context.scene)
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True)
         context.view_layer.objects.active = obj
+        from .annotation_manager import sync_annotation_list
+        sync_annotation_list(context.scene, preferred=obj)
         self.report({'INFO'}, f'Created {obj.name}; position and scale over an SKU')
         return {'FINISHED'}
 
@@ -227,6 +239,10 @@ class BVTSTUDIO_OT_register_annotations(bpy.types.Operator):
             return {'CANCELLED'}
         for idx, obj in enumerate(objs):
             configure_outline(obj, idx, bool(context.scene.get(PREVIEW_PROP, False)))
+        from .scene_lock import apply_scene_locks
+        apply_scene_locks(context.scene)
+        from .annotation_manager import sync_annotation_list
+        sync_annotation_list(context.scene)
         self.report({'INFO'}, f'Configured {len(objs)} annotations')
         return {'FINISHED'}
 
@@ -246,6 +262,8 @@ class BVTSTUDIO_OT_renumber(bpy.types.Operator):
             count = renumber(context.scene, objects)
             for i, obj in enumerate(objects):
                 configure_outline(obj, i, bool(context.scene.get(PREVIEW_PROP, False)))
+            from .annotation_manager import sync_annotation_list
+            sync_annotation_list(context.scene)
             self.report({'INFO'}, f'Renumbered {count} annotations')
             return {'FINISHED'}
         except Exception as exc:
@@ -274,28 +292,35 @@ class BVTSTUDIO_OT_validate(bpy.types.Operator):
     bl_description = 'Check projected bboxes, classes and duplicates'
 
     def execute(self, context):
-        boxes, errors, classes = collect_boxes(context.scene)
-        for msg in errors:
-            print('[BVT Studio] Annotation validation:', msg)
-        if errors:
-            self.report({'WARNING'}, f'{len(errors)} issue(s); {len(boxes)} boxes; see Blender console')
+        from .quality_gate import evaluate_quality
+        report, _errors, _boxes, _classes = evaluate_quality(context.scene)
+        if report['errors']:
+            self.report({'WARNING'},
+                        f"Quality Gate: {report['errors']} error(s), "
+                        f"{report['warnings']} warning(s); see sidebar")
+        elif report['warnings']:
+            self.report({'INFO'},
+                        f"Quality Gate: {report['boxes']} boxes, "
+                        f"{report['warnings']} review warning(s)")
         else:
-            self.report({'INFO'}, f'Valid: {len(boxes)} boxes, {len(classes)} classes')
+            self.report({'INFO'}, f"Quality Gate passed: {report['boxes']} boxes")
         return {'FINISHED'}
 
 
 class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
     bl_idname = 'bvt_studio.export_yolo'
     bl_label = 'Export Clean Image + YOLO'
-    bl_description = 'Render an image without annotation overlays and export YOLO bbox labels'
+    bl_description = 'Render clean PNG, export YOLO TXT, portable YAML and SVG box preview'
 
     def execute(self, context):
         scene = context.scene
-        boxes, errors, classes = collect_boxes(scene)
+        # Always revalidate: never use a possibly stale sidebar report.
+        from .quality_gate import evaluate_quality
+        report, errors, boxes, classes = evaluate_quality(scene)
         if errors:
             for e in errors:
                 print('[BVT Studio] Export blocked:', e)
-            self.report({'ERROR'}, f'{len(errors)} validation issue(s); see Blender console')
+            self.report({'ERROR'}, f'{len(errors)} validation error(s); see Quality Gate panel')
             return {'CANCELLED'}
         if not bpy.data.filepath and scene.bvt_studio.export_dir.startswith('//'):
             self.report({'ERROR'}, 'Save your .blend first, or choose an absolute output folder')
@@ -306,14 +331,20 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
             train_labels = root / 'labels' / 'train'
             val_images = root / 'images' / 'val'
             val_labels = root / 'labels' / 'val'
-            for folder in (train_images, train_labels, val_images, val_labels):
+            previews = root / 'previews'
+            for folder in (train_images, train_labels, val_images, val_labels, previews):
                 folder.mkdir(parents=True, exist_ok=True)
             index = 1
-            while (train_images / f'sample_{index:06d}.png').exists() or (train_labels / f'sample_{index:06d}.txt').exists():
+            while any(p.exists() for p in (
+                    train_images / f'sample_{index:06d}.png',
+                    train_labels / f'sample_{index:06d}.txt',
+                    previews / f'sample_{index:06d}.svg',
+                    root / f'sample_{index:06d}_manifest.json')):
                 index += 1
             stem = f'sample_{index:06d}'
             image_path = train_images / (stem + '.png')
             label_path = train_labels / (stem + '.txt')
+            preview_path = previews / (stem + '.svg')
             objs = scene_annotations(scene)
             old_hidden = {obj: obj.hide_render for obj in objs}
             old_path = scene.render.filepath
@@ -335,25 +366,25 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
                 scene.render.image_settings.color_mode = old_color
             if not image_path.exists():
                 raise RuntimeError('Blender did not write the expected image file')
-            lines = [
-                f'{b["class_id"]} {b["x"]:.7f} {b["y"]:.7f} {b["w"]:.7f} {b["h"]:.7f}'
-                for b in boxes
-            ]
-            label_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
-            # YAML maps numeric class IDs to names. Val dir is created empty by design.
-            yaml_lines = [
-                'path: ' + json.dumps(root.as_posix(), ensure_ascii=False),
-                'train: images/train', 'val: images/val',
-                f'nc: {len(classes)}', 'names:',
-            ]
-            for class_id in sorted(classes):
-                yaml_lines.append(f'  {class_id}: {json.dumps(classes[class_id], ensure_ascii=False)}')
-            (root / 'data.yaml').write_text('\n'.join(yaml_lines) + '\n', encoding='utf-8')
+            # Use the exact normalized values serialized into labels for
+            # the SVG preview. No Blender-modified wireframe geometry involved.
+            txt = label_text(boxes)
+            label_path.write_text(txt, encoding='utf-8')
+            image_width = round(scene.render.resolution_x * scene.render.resolution_percentage / 100)
+            image_height = round(scene.render.resolution_y * scene.render.resolution_percentage / 100)
+            preview_path.write_text(
+                svg_from_labels(txt, classes, image_width, image_height, image_path.name),
+                encoding='utf-8',
+            )
+            # YAML paths are relative to the folder containing data.yaml.
+            # The val directory is intentionally empty for single-photo export.
+            (root / 'data.yaml').write_text(portable_data_yaml(classes), encoding='utf-8')
             source = get_source(scene)
             manifest = dict(
                 schema='bvt_studio_2d_yolo_v0.1',
                 scene=scene.name,
                 image=f'images/train/{stem}.png',
+                preview=f'previews/{stem}.svg',
                 labels=f'labels/train/{stem}.txt',
                 image_width=round(scene.render.resolution_x * scene.render.resolution_percentage / 100),
                 image_height=round(scene.render.resolution_y * scene.render.resolution_percentage / 100),
@@ -365,14 +396,24 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
                 glass=[
                     dict(object=o.name, reflection=o.get('bvt_glass_reflection', 0),
                          tint=o.get('bvt_glass_tint', 0), haze=o.get('bvt_glass_haze', 0),
-                         frost=o.get('bvt_glass_frost', 0))
+                         frost=o.get('bvt_glass_frost', 0),
+                         droplets=o.get('bvt_glass_droplets', 0),
+                         dirt=o.get('bvt_glass_dirt', 0),
+                         artifact_coverage=o.get('bvt_artifact_coverage', 0),
+                         artifact_seed=o.get('bvt_artifact_seed', 0),
+                         artifact_droplet_scale=o.get('bvt_artifact_droplet_scale', 1.0),
+                         artifact_frost_edge=o.get('bvt_artifact_frost_edge', 0.35),
+                         artifact_refraction=o.get('bvt_artifact_refraction', 0.016),
+                         artifact_relief=o.get('bvt_artifact_relief', 0.80),
+                         artifact_preset=o.get('bvt_artifact_preset', 'CUSTOM'))
                     for o in scene.objects if o.get('bvt_role') == 'glass_overlay'
                 ],
                 note='One scene photo, no automatic validation split; val is empty',
             )
             (root / (stem + '_manifest.json')).write_text(
                 json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
-            self.report({'INFO'}, f'YOLO exported: {len(boxes)} boxes -> {image_path}')
+            scene.bvt_studio.last_preview_svg = str(preview_path)
+            self.report({'INFO'}, f'YOLO exported: {len(boxes)} boxes + preview -> {root}')
             return {'FINISHED'}
         except Exception as exc:
             self.report({'ERROR'}, f'Export failed: {exc}')
@@ -380,10 +421,29 @@ class BVTSTUDIO_OT_export_yolo(bpy.types.Operator):
             return {'CANCELLED'}
 
 
+class BVTSTUDIO_OT_open_yolo_preview(bpy.types.Operator):
+    bl_idname = 'bvt_studio.open_yolo_preview'
+    bl_label = 'Open Last YOLO Preview'
+    bl_description = 'Open the SVG overlay of the last exported clean PNG in your browser'
+
+    def execute(self, context):
+        filepath = context.scene.bvt_studio.last_preview_svg
+        if not filepath or not Path(filepath).is_file():
+            self.report({'WARNING'}, 'No preview found; export a sample first')
+            return {'CANCELLED'}
+        try:
+            bpy.ops.wm.path_open(filepath=filepath)
+        except Exception as exc:
+            self.report({'ERROR'}, f'Cannot open preview: {exc}')
+            return {'CANCELLED'}
+        return {'FINISHED'}
+
+
 CLASSES = (
     BVTSTUDIO_OT_add_annotation, BVTSTUDIO_OT_register_annotations,
     BVTSTUDIO_OT_renumber, BVTSTUDIO_OT_toggle_preview,
     BVTSTUDIO_OT_validate, BVTSTUDIO_OT_export_yolo,
+    BVTSTUDIO_OT_open_yolo_preview,
 )
 
 

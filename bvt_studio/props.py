@@ -1,10 +1,232 @@
 import bpy
 from bpy.props import (
-    PointerProperty, StringProperty, FloatProperty, EnumProperty,
+    PointerProperty, StringProperty, FloatProperty, EnumProperty, BoolProperty,
+    CollectionProperty, IntProperty,
 )
 
 
+def on_lock_change(self, context):
+    # Deferred import avoids a registration-time circular dependency.
+    from .scene_lock import on_group_settings_changed
+    on_group_settings_changed(self, context)
+
+
+def on_depth_change(self, context):
+    from .depth import on_depth_settings_changed
+    on_depth_settings_changed(self, context)
+
+
+def on_annotation_selection_change(self, context):
+    from .annotation_manager import on_annotation_index_changed
+    on_annotation_index_changed(self, context)
+
+
+class BVTStudioAnnotationItem(bpy.types.PropertyGroup):
+    obj: PointerProperty(name='Annotation', type=bpy.types.Object)
+
+
+class BVTStudioQualityItem(bpy.types.PropertyGroup):
+    severity: StringProperty(name='Severity')
+    code: StringProperty(name='Code')
+    message: StringProperty(name='Message')
+    obj: PointerProperty(name='Annotation', type=bpy.types.Object)
+
+
 class BVTStudioSettings(bpy.types.PropertyGroup):
+    artifact_target_glass: PointerProperty(
+        name='Glass Target', type=bpy.types.Object,
+        description='Glass material target, even if the glass object is selection-locked',
+    )
+    artifact_preset: EnumProperty(
+        name='Glass Preset',
+        items=[
+            ('CLEAN', 'Clean', 'Minimal artifact baseline'),
+            ('QA_TRANSPARENT', 'QA Transparent', 'True no-effect render baseline'),
+            ('LIGHT_CONDENSATION', 'Light Condensation', 'Gentle condensed moisture'),
+            ('HEAVY_CONDENSATION', 'Heavy Condensation', 'Strong condensation and droplets'),
+            ('FROST', 'Frost', 'Patchy cold freezer frost'),
+            ('DIRTY_GLASS', 'Dirty Glass', 'Smudges and dirt'),
+            ('REFLECTIONS', 'Reflections', 'Pronounced cool LED reflections'),
+        ],
+        default='LIGHT_CONDENSATION',
+    )
+    artifact_intensity: FloatProperty(
+        name='Intensity', default=1.0, min=0.0, max=1.0,
+        description='Multiplier applied to all selected preset channels',
+    )
+    artifact_coverage: FloatProperty(
+        name='Coverage', default=0.30, min=0.0, max=1.0,
+        description='Relative droplet density; controlled independently of strength',
+    )
+    artifact_droplet_scale: FloatProperty(
+        name='Droplet Scale', default=1.0, min=0.5, max=2.0,
+        description='Higher values produce smaller and more numerous droplets',
+    )
+    artifact_frost_edge: FloatProperty(
+        name='Frost Edge', default=0.35, min=0.0, max=1.0,
+        description='Additional irregular frost near the perimeter of this glass',
+    )
+    artifact_refraction: FloatProperty(
+        name='Refraction Strength', default=0.016, min=0.0, max=0.04,
+        precision=3, description='Approximate local UV distortion inside drops',
+    )
+    artifact_relief: FloatProperty(
+        name='Droplet Relief', default=0.80, min=0.0, max=1.0,
+        description='Contrast of bright and dark droplet rims',
+    )
+    hybrid_wetness: FloatProperty(
+        name='Wetness', default=.60, min=0.0, max=1.0,
+        description='Irregular wet film opacity on Light/Heavy condensation only',
+    )
+    hybrid_macro: FloatProperty(
+        name='Macro Droplets', default=.72, min=0.0, max=1.0,
+        description='Density of medium and large droplets on Light/Heavy only',
+    )
+    hybrid_micro: FloatProperty(
+        name='Micro Droplets', default=.60, min=0.0, max=1.0,
+        description='Density of tiny rounded water beads on Light/Heavy only',
+    )
+    artifact_mask_inset: FloatProperty(
+        name='Glass Mask Inset', default=0.045, min=0.0, max=0.25,
+        precision=3, description='Inset effect inward from the glass plane border to avoid frame bleed',
+    )
+    artifact_mask_feather: FloatProperty(
+        name='Mask Feather', default=0.030, min=0.001, max=0.25,
+        precision=3, description='Soft transition width of the glass-area mask',
+    )
+    artifact_aperture_left: FloatProperty(
+        name='Aperture Left', default=0.0, min=0.0, max=0.95,
+        precision=3, description='Optional inner glass aperture min U for masking frame and mullions',
+    )
+    artifact_aperture_right: FloatProperty(
+        name='Aperture Right', default=1.0, min=0.05, max=1.0,
+        precision=3, description='Optional inner glass aperture max U for masking frame and mullions',
+    )
+    artifact_aperture_bottom: FloatProperty(
+        name='Aperture Bottom', default=0.0, min=0.0, max=0.95,
+        precision=3, description='Optional inner glass aperture min V for masking frame and mullions',
+    )
+    artifact_aperture_top: FloatProperty(
+        name='Aperture Top', default=1.0, min=0.05, max=1.0,
+        precision=3, description='Optional inner glass aperture max V for masking frame and mullions',
+    )
+    artifact_aperture_feather: FloatProperty(
+        name='Aperture Feather', default=0.020, min=0.001, max=0.25,
+        precision=3, description='Soft transition width for the optional inner glass aperture mask',
+    )
+    precision_mask_path: StringProperty(
+        name='PNG Mask', subtype='FILE_PATH', default='',
+        description='Optional black/white/grayscale PNG for selected Glass Target; packed on assignment',
+    )
+    qa_leakage_limit: FloatProperty(
+        name='QA Max Leakage', default=0.0005, min=0.0, max=0.1, precision=5,
+        description='Maximum fraction of tested forbidden pixels allowed to change',
+    )
+    droplet_alpha_path: StringProperty(
+        name='Alpha PNG', subtype='FILE_PATH', default='',
+        description='Grayscale droplet occupancy: black clear, white water',
+    )
+    droplet_height_path: StringProperty(
+        name='Height PNG', subtype='FILE_PATH', default='',
+        description='Grayscale height image matching Alpha PNG dimensions',
+    )
+    droplet_normal_path: StringProperty(
+        name='Normal PNG', subtype='FILE_PATH', default='',
+        description='OpenGL tangent RGB normal map (+Y), same dimensions',
+    )
+    droplet_map_tiling: FloatProperty(
+        name='Map Tiling', default=1.0, min=0.25, max=8.0,
+        description='Number of repeats of photographic maps across the glass',
+    )
+    droplet_map_rotation: FloatProperty(
+        name='Map Rotation', default=0.0, min=-180.0, max=180.0,
+        description='Map orientation for imported droplets in degrees',
+    )
+    realistic_atlas_resolution: EnumProperty(
+        name='Atlas Resolution', items=[('256', '256 px', 'Fast preview'),
+                                        ('512', '512 px', 'Balanced'),
+                                        ('1024', '1024 px', 'Detailed')], default='512',
+        description='Resolution of each of the three generated maps',
+    )
+    realistic_atlas_density: FloatProperty(
+        name='Atlas Density', default=1.0, min=0.25, max=2.0,
+        description='Count of micro beads and larger drops, not overall glass mask',
+    )
+    realistic_atlas_streaks: FloatProperty(
+        name='Streaks', default=0.35, min=0.0, max=1.0,
+        description='Amount of gravity-aligned trails and elongated drops',
+    )
+    optical_lens_gain: FloatProperty(
+        name='Optical Lens', default=1.45, min=.25, max=2.5,
+        description='Optical refraction multiplier for Realistic Atlas only',
+    )
+    optical_edge_gain: FloatProperty(
+        name='Contact Shadow', default=1.0, min=0., max=2.5,
+        description='Directional dark contact-line rim on water droplets',
+    )
+    optical_glint_gain: FloatProperty(
+        name='Contact Highlight', default=1.25, min=0., max=2.5,
+        description='Directional bright edge glints from alpha/normal maps',
+    )
+    optical_micro_gain: FloatProperty(
+        name='Micro Glints', default=.35, min=0., max=1.,
+        description='Limit tiny bead glints without hiding product labels',
+    )
+    artifact_seed: IntProperty(
+        name='Seed', default=42, min=0, max=2147483647,
+        description='Deterministic microstructure seed for the selected glass plane',
+    )
+    quality_items: CollectionProperty(type=BVTStudioQualityItem)
+    quality_index: IntProperty(name='Issue row', default=-1)
+    quality_checked: BoolProperty(name='Quality report available', default=False)
+    quality_box_count: IntProperty(name='Validated boxes', default=0)
+    quality_error_count: IntProperty(name='Validation errors', default=0)
+    quality_warning_count: IntProperty(name='Validation warnings', default=0)
+
+    annotation_items: CollectionProperty(type=BVTStudioAnnotationItem)
+    annotation_index: IntProperty(name='Annotation row', default=-1,
+                                  update=on_annotation_selection_change)
+    batch_class_id: IntProperty(name='Class ID', default=0, min=0)
+    batch_class_name: StringProperty(name='Class Name', default='ice_cream')
+    batch_enabled: BoolProperty(name='Enabled for YOLO', default=True)
+
+    scene_locks_enabled: BoolProperty(
+        name='Scene protection active', default=False, update=on_lock_change,
+        description='Apply BVT selection and transform locks to this scene',
+    )
+    photo_edit_enable: BoolProperty(
+        name='Photo Edit Enable', default=False, update=on_lock_change)
+    camera_edit_enable: BoolProperty(
+        name='Camera Edit Enable', default=False, update=on_lock_change)
+    light_edit_enable: BoolProperty(
+        name='Light Edit Enable', default=False, update=on_lock_change)
+    glass_edit_enable: BoolProperty(
+        name='Glass Edit Enable', default=True, update=on_lock_change)
+    annotations_edit_enable: BoolProperty(
+        name='Annotations Edit Enable', default=True, update=on_lock_change)
+
+    photo_depth_lock: BoolProperty(
+        name='Photo - Lock Depth', default=True, update=on_depth_change,
+        description='Keep photo origin in its initial reference plane',
+    )
+    glass_depth_lock: BoolProperty(
+        name='Glass - Lock Depth', default=True, update=on_depth_change,
+        description='Keep glass inside a plane parallel to source photo',
+    )
+    annotations_depth_lock: BoolProperty(
+        name='Annotations - Lock Depth', default=True, update=on_depth_change,
+        description='Keep YOLO annotation origins at fixed photo-relative depth',
+    )
+    depth_target_glass: PointerProperty(
+        name='Glass Surface', type=bpy.types.Object,
+        description='Glass to reposition, even if viewport selection is locked',
+    )
+    glass_depth_offset_m: FloatProperty(
+        name='Depth Offset', default=0.012, min=0.001, max=0.150,
+        precision=4, subtype='DISTANCE', unit='LENGTH',
+        description='Distance to photo towards camera for the chosen Glass Plane',
+    )
+
     source_object: PointerProperty(
         name="Image Plane", type=bpy.types.Object,
         description="Image plane used for camera fitting and initial annotation placement",
@@ -24,11 +246,23 @@ class BVTStudioSettings(bpy.types.PropertyGroup):
         ],
         default='ORIGINAL',
     )
+    last_preview_svg: StringProperty(
+        name='Last exported SVG preview', subtype='FILE_PATH', default='',
+        description='Full path to the last exported YOLO overlay',
+    )
+    visual_quality_report_path: StringProperty(
+        name='Visual QA JSON', subtype='FILE_PATH',
+        default='//qa_renders/quality_gate_step5/quality_gate_v2_report.json',
+        description='Previously created headless visual calibration report',
+    )
+    visual_quality_result: StringProperty(name='Visual QA Result', default='Not evaluated')
+    visual_quality_status: BoolProperty(name='Visual QA accepted', default=False)
+
     export_dir: StringProperty(
         name="Output folder", subtype='DIR_PATH', default="//bvt_studio_dataset",
     )
 
-CLASSES = (BVTStudioSettings,)
+CLASSES = (BVTStudioAnnotationItem, BVTStudioQualityItem, BVTStudioSettings)
 
 
 def register():

@@ -1,17 +1,18 @@
 """BVT Studio — 2.5D image, glass and YOLO workflow for Blender 5.2+."""
+BUILD_STAGE = "alpha.5-step5"
 bl_info = {
     "name": "BVT Studio — 2.5D Dataset Builder",
     "author": "BVT Studio contributors",
-    "version": (0, 2, 0),
+    "version": (0, 4, 0),
     "blender": (5, 2, 0),
     "location": "3D View > Sidebar (N) > BVT Studio",
     "description": "Photo planes, named glass collections, YOLO annotations and export",
     "category": "3D View",
 }
 
-from . import props, scene_tools, glass, annotation, ui
+from . import glass_v02_ui, props, scene_tools, glass, annotation, annotation_manager, scene_lock, depth, quality_gate, artifact_presets, ui, glass_mask, droplet_maps, realistic_atlas, optical_water, visual_quality_ui
 
-MODULES = (props, scene_tools, glass, annotation, ui)
+MODULES = (props, scene_tools, glass, annotation, annotation_manager, scene_lock, depth, quality_gate, artifact_presets, ui, glass_mask, droplet_maps, realistic_atlas, optical_water, visual_quality_ui, glass_v02_ui)
 
 
 def register():
