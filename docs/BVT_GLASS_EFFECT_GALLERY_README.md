@@ -1,5 +1,7 @@
 # BVT Studio — Visual Glass Gallery v0.1
 
+> Current example inputs: `examples/freezer_planogram/`. See `examples/README.md`; older installation and absolute path examples below describe the historical patch.
+
 ## Purpose
 
 Generate 13 *separate*, editable Blender 5.2.3+ `.blend` scenes, matching PNG renders and independent four-pane glass overlays on one original 1672×941 freezer photo. Each launched Blender process begins with `--factory-startup`. Source image is **packed** in each `.blend`; generated atlases and test masks are packed too.

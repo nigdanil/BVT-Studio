@@ -638,3 +638,20 @@ are provisional; no OCR or photorealism guarantee is implied. See
 [Quality Gate v2 Step 5](docs/QUALITY_GATE_V2_STEP5.md) for the Blender
 headless commands, outputs, persistence smoke and limitations. The sidebar's
 Visual Quality report reader now accepts the v2 JSON as well as legacy Step 4.
+
+<!-- bvt-demo-release-v1 -->
+## Ready-to-open demo and release downloads
+
+See [GitHub Releases](https://github.com/nigdanil/BVT-Studio/releases) for published
+pre-release packages (when available). Install the add-on ZIP, extract the gallery
+ZIP, then open `BVT_Studio_Effects_Gallery/index.html` or any `scene.blend` in
+Blender 5.2.3. The gallery has 13 independently reopenable scenes; the source image,
+glass masks and water maps are packed in the scenes. All inputs are also available
+under [`examples/freezer_planogram/`](examples/freezer_planogram/).
+
+Build the full demo with `python scripts/build_release.py --version <new-tag> --blender <path>`.
+See [Release Builder](docs/RELEASE_BUILDER_V01.md) for QA, checksums and publishing a
+**draft** prerelease. The synthetic fixture is not real-world photorealism or YOLO
+accuracy validation. Generated runs stay in `qa_renders/`; released ZIPs are not
+committed to the source tree.
+<!-- /bvt-demo-release-v1 -->

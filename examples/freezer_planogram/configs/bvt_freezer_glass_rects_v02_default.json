@@ -1,0 +1,11 @@
+{
+  "reference_size": [1672, 941],
+  "coordinate_system": "image pixels; origin top-left; rectangles = [left, top, right, bottom]",
+  "glass_rectangles": [
+    [192, 108, 498, 807],
+    [513, 108, 819, 807],
+    [834, 108, 1145, 807],
+    [1157, 108, 1464, 807]
+  ],
+  "warning": "Approximate rectangle openings from a user-provided image. Inspect and adjust before applying to real QA."
+}

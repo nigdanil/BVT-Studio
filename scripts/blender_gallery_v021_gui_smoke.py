@@ -5,6 +5,7 @@ DO NOT SAVE this opened scene after the test unless intended.
 The user's actual manual clicks and visual appearance still need inspection.
 """
 import json
+import os
 import bpy
 from pathlib import Path
 
@@ -48,7 +49,9 @@ def main():
     if before!=after:
         raise AssertionError('Changing selected target modified glass data')
 
-    config=Path('D:/BVT-Studio/configs/scene_four_glasses_v02.json')
+    repo=Path(os.environ.get('BVT_REPO_ROOT', str(source_file.parents[3])))
+    example=Path(os.environ.get('BVT_EXAMPLE_DIR', str(repo/'examples/freezer_planogram')))
+    config=example/'configs/scene_four_glasses_v02.json'
     if not config.is_file():raise FileNotFoundError(config)
     prepared=parse_scene_config(config)
     if set(prepared)!=set(names):
@@ -80,7 +83,7 @@ def main():
             'water_kinds':{o.name:o.get('bvt_water_v02_kind') for o in glasses},
             'atlas_independent':True,
             'warning':'Operator runtime validated in GUI; human must still click UI and inspect render.'}
-    output=Path('D:/BVT-Studio/qa_renders/effects_gallery_v021/ui_gui_smoke_report.json')
+    output=source_file.parents[1]/'ui_gui_smoke_report.json'
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf8')
     print('GUI_GLASS_SELECT=PASS')

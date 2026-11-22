@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd /d/BVT-Studio
-BLENDER='/c/Program Files/Blender Foundation/Blender 5.2/blender.exe'
-PHOTO='C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png'
-OUT='D:/BVT-Studio/qa_renders/effects_gallery_v01'
-RECTS='D:/BVT-Studio/configs/bvt_freezer_glass_rects_1672x941.json'
+source "$(dirname -- "${BASH_SOURCE[0]}")/gallery_paths.sh"
+OUT="${BVT_OUTPUT_DIR:-$REPO/qa_renders/effects_gallery_v01}"
 
 [ -f "$PHOTO" ] || { echo "Photo not found: $PHOTO"; exit 1; }
 [ -f "$RECTS" ] || { echo "Rectangles config not found: $RECTS"; exit 1; }
@@ -34,7 +31,7 @@ for MODE in "${MODES[@]}"; do
   "$BLENDER" \
     --background --factory-startup --python-exit-code 1 \
     --python scripts/bvt_glass_effect_gallery.py -- \
-    --repo 'D:/BVT-Studio' \
+    --repo "$REPO" \
     --photo "$PHOTO" \
     --output "$OUT" \
     --rects-file "$RECTS" \

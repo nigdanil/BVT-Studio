@@ -12,6 +12,8 @@ jobs:
           python-version: '3.12'
       - name: Install test dependencies
         run: python -m pip install numpy==2.2.6
+      - name: Validate bundled examples
+        run: python scripts/validate_examples.py
       - name: Static and numerical tests
         run: python -m unittest discover -s tests -v
       - name: Build Blender addon ZIP

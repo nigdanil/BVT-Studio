@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 # Run isolated v0.2.1 calibration (v0.2 results remain untouched).
 set -euo pipefail
-cd /d/BVT-Studio
-BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"
-PHOTO="C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png"
-REPO="D:/BVT-Studio"
-OUT="$REPO/qa_renders/effects_gallery_v021"
-RECT="$REPO/configs/bvt_freezer_glass_rects_1672x941.json"
-[[ -f "$RECT" ]] || RECT="$REPO/configs/bvt_freezer_glass_rects_v02_default.json"
-CONFIG="$REPO/configs/effects_gallery_v02.json"
+source "$(dirname -- "${BASH_SOURCE[0]}")/gallery_paths.sh"
+OUT="${BVT_OUTPUT_DIR:-$REPO/qa_renders/effects_gallery_v021}"
+
 [[ -f "$BLENDER" && -f "$PHOTO" && -f "$RECT" && -f "$CONFIG" ]] || {
   echo "Missing Blender/photo/rects/config; inspect paths in this script" >&2
   exit 1

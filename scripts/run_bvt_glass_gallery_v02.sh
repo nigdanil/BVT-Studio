@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /d/BVT-Studio
-BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"
-PHOTO="C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png"
-REPO="D:/BVT-Studio"
-OUT="D:/BVT-Studio/qa_renders/effects_gallery_v02"
-RECTS="$REPO/configs/bvt_freezer_glass_rects_1672x941.json"
-# Keep any user-edited v0.1 rectangle definitions intact; use v0.2 defaults otherwise.
-[[ -f "$RECTS" ]] || RECTS="$REPO/configs/bvt_freezer_glass_rects_v02_default.json"
-CONFIG="$REPO/configs/effects_gallery_v02.json"
+source "$(dirname -- "${BASH_SOURCE[0]}")/gallery_paths.sh"
+OUT="${BVT_OUTPUT_DIR:-$REPO/qa_renders/effects_gallery_v02}"
 
+[[ -f "$BLENDER" ]] || { echo "ERROR: set BVT_BLENDER"; exit 1; }
 [[ -f "$PHOTO" ]] || { echo "ERROR: edit PHOTO in this shell script"; exit 1; }
 [[ -f "$CONFIG" && -f "$RECTS" ]] || { echo "ERROR: missing JSON config/rects"; exit 1; }
 [[ -f "$REPO/bvt_studio/water_effects_v02.py" ]] || { echo "ERROR: apply v02 patch first"; exit 1; }

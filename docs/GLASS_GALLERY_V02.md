@@ -1,5 +1,7 @@
 # BVT Studio — Glass Effects Gallery v0.2 (experimental patch)
 
+> Current example inputs: `examples/freezer_planogram/`. See `examples/README.md`; older installation and absolute path examples below describe the historical patch.
+
 **Patch baseline:** `8934f24`, branch `feature/photorealistic-droplets-v05`.
 **Blender:** 5.2.3 LTS on Windows. **Status:** source-level unit tests pass; GUI, EEVEE and headless rendering require validation on your Blender installation. Do not merge to `develop` before this validation.
 

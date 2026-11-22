@@ -1,5 +1,7 @@
 # BVT Studio — Water QA Calibration v0.2.1
 
+> Current example inputs: `examples/freezer_planogram/`. See `examples/README.md`; older installation and absolute path examples below describe the historical patch.
+
 Target: `feature/photorealistic-droplets-v05`, based on the uncommitted Gallery v0.2 on commit `8934f24`.
 
 This patch changes **only** `scripts/bvt_glass_effect_gallery_v02.py`, plus new tests/scripts/docs. The water generator, addon registration, UI implementation, YOLO exporter and Step 6 dataset QA are unchanged.
