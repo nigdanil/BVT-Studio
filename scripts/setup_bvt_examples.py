@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import struct
 
-IMAGE = 'BVT_Freezer_Planogram_16x9_v11_eng.png'
+IMAGE = 'chatgpt_000011.png'
 EXPECTED_SHA = 'c3dd40d774eec1c3571866ab56b1c418f4665f783fa99d2b8dcef4da01972b30'
 CONFIGS = ('bvt_freezer_glass_rects_1672x941.json', 'bvt_freezer_glass_rects_v02_default.json',
            'effects_gallery_v02.json', 'scene_four_glasses_v02.json')
@@ -21,7 +21,7 @@ else
   REPO="$BVT_ROOT_POSIX"
 fi
 EXAMPLE="${BVT_EXAMPLE_DIR:-$REPO/examples/freezer_planogram}"
-PHOTO="${BVT_PHOTO:-$EXAMPLE/images/BVT_Freezer_Planogram_16x9_v11_eng.png}"
+PHOTO="${BVT_PHOTO:-$EXAMPLE/images/chatgpt_000011.png}"
 RECTS="${BVT_RECTS:-$EXAMPLE/configs/bvt_freezer_glass_rects_1672x941.json}"
 RECT="$RECTS"
 CONFIG="${BVT_CONFIG:-$EXAMPLE/configs/effects_gallery_v02.json}"

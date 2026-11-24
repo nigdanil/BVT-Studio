@@ -113,7 +113,11 @@ def run(argv, cwd, log):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description=__doc__)
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args and args[0] == 'research':
+        from run_research_dataset import main as research_main
+        return research_main(args[1:])
+    p = argparse.ArgumentParser(description=__doc__, epilog='Research mode: bvt_dataset_runner.py research --help')
     p.add_argument('--example', default='freezer_planogram', choices=['freezer_planogram'])
     p.add_argument('--effects', nargs='+', default=DEFAULT_EFFECTS, choices=NORMAL_EFFECTS)
     p.add_argument('--count', type=int, default=2, help='Replicates per effect, plus one clean control')

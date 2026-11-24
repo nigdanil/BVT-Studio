@@ -37,7 +37,7 @@ cd /d/BVT-Studio
 "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
   --background --factory-startup --python-exit-code 1 \
   --python scripts/blender_optical_water_gallery.py -- \
-  --photo "C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png" \
+  --photo "examples/freezer_planogram/images/chatgpt_000011.png" \
   --output "D:/BVT-Studio/qa_renders/optical_water_step3" --save-blend
 ```
 

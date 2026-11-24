@@ -14,4 +14,6 @@ canonical regression configurations in `configs/`, and generated results in
 - Only commit images and assets you have permission to redistribute. Do not
   commit customer photos, full training datasets, or generated galleries.
 
+The Demo fixture uses only `freezer_planogram/images/chatgpt_000011.png` as its source image. The full Research collections belong in `../data_local/`, not in examples or release archives. See [dataset setup](../datasets/README.md). The demo does not include verified YOLO labels.
+
 For the JSON catalog see [freezer_planogram](freezer_planogram/README.md). Only `configs/presets/` files are intended for manual preset import.

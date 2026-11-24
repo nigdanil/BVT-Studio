@@ -13,3 +13,12 @@ bvt_studio_dataset/
 
 # Local Blender visual QA output; inspect before approving shader changes.
 qa_renders/
+
+# Local research datasets, annotations, downloads and experiment outputs.
+/data_local/
+/examples/local/
+
+# Guard the legacy dataset location during migration; keep the demo fixture.
+/examples/freezer_planogram/images/chatgpt_*.png
+!/examples/freezer_planogram/images/chatgpt_000011.png
+/examples/freezer_planogram/images/real_wikimedia/

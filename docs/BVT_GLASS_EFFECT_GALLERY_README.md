@@ -80,5 +80,5 @@ Compare each `render.png` to `00_clean/render.png`. For the same atlas density, 
 - Requires installed Blender 5.2.3 LTS and **the current BVT Studio source checkout**; generated `.blend` contains materials/properties but the add-on should be installed/enabled in GUI to use BVT controls.
 - No actual Blender executable in the authoring environment: Python syntax was checked, but these new gallery scripts have to be **runtime-verified on your Windows Blender**. Existing BVT smoke tests have passed according to the user's logs.
 - Excluding nonrectangular metal bars or reflections requires genuine per-pane pixel masks; auto-generated masks do not assert that.
-- The `PHOTO` value in shell defaults to `C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png`.
+- The `PHOTO` value in shell defaults to `$EXAMPLE/images/chatgpt_000011.png`.
 - Save scenes in `qa_renders/`, not into source-controlled datasets; do not commit photos/large rendered assets accidentally.

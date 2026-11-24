@@ -48,7 +48,7 @@ cd /d/BVT-Studio
 "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" \
   --background --factory-startup --python-exit-code 1 \
   --python scripts/blender_quality_gate_v2.py -- \
-  --photo "C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png" \
+  --photo "examples/freezer_planogram/images/chatgpt_000011.png" \
   --output "D:/BVT-Studio/qa_renders/quality_gate_step5" \
   --save-blend
 ```

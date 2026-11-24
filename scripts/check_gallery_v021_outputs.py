@@ -65,9 +65,11 @@ def inspect(root):
 
 def main():
     p=argparse.ArgumentParser()
-    p.add_argument('--output',default='D:/BVT-Studio/qa_renders/effects_gallery_v021')
+    default_output = Path(__file__).resolve().parents[1] / 'qa_renders/effects_gallery_v021'
+    p.add_argument('--output', type=Path, default=default_output,
+                   help='Gallery directory (default: repository qa_renders/effects_gallery_v021)')
     a=p.parse_args()
-    problems=inspect(Path(a.output))
+    problems=inspect(a.output)
     for issue in problems:print('FAILED:',issue,file=sys.stderr)
     if problems:raise SystemExit(2)
     print('GALLERY_V021_MANIFEST_QA=PASS')

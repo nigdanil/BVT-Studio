@@ -1,0 +1,353 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BVT-Studio Dataset Manifest v1 record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "image_id",
+    "collection_id",
+    "relative_path",
+    "original_filename",
+    "author",
+    "copyright_notice",
+    "attribution_text",
+    "scene_type",
+    "viewpoint",
+    "sha256",
+    "width",
+    "height",
+    "file_format",
+    "origin_type",
+    "source_page_url",
+    "source_url",
+    "license_url",
+    "license_evidence_url",
+    "license_id",
+    "license_verification_status",
+    "license_checked_at",
+    "derivative_use_review_status",
+    "commercial_use_review_status",
+    "redistribution_review_status",
+    "trademark_review_status",
+    "packaging_types",
+    "annotation_status",
+    "glass_mask_status",
+    "split",
+    "source_group_id",
+    "storage_provider",
+    "storage_relative_path",
+    "local_cache_path",
+    "integrity_status",
+    "source_registry_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "image_id": {
+      "type": "string",
+      "pattern": "^(chatgpt|wikimedia)_[0-9]{6}$"
+    },
+    "collection_id": {
+      "enum": [
+        "synthetic_chatgpt",
+        "real_wikimedia"
+      ]
+    },
+    "relative_path": {
+      "type": "string",
+      "pattern": "^clean/images/(chatgpt_[0-9]{6}\\.png|wikimedia_[0-9]{6}\\.jpg)$"
+    },
+    "original_filename": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "author": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "copyright_notice": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "attribution_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "scene_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "viewpoint": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "file_format": {
+      "enum": [
+        "PNG",
+        "JPEG"
+      ]
+    },
+    "origin_type": {
+      "enum": [
+        "synthetic",
+        "real"
+      ]
+    },
+    "source_page_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "source_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "license_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "license_evidence_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "license_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "license_verification_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "registry_page_reviewed",
+        "api_evidence_recorded",
+        "manual_review_required",
+        "verified",
+        "rejected"
+      ]
+    },
+    "license_checked_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "derivative_use_review_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "approved",
+        "conditional",
+        "rejected"
+      ]
+    },
+    "commercial_use_review_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "approved",
+        "conditional",
+        "rejected"
+      ]
+    },
+    "redistribution_review_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "approved",
+        "conditional",
+        "rejected"
+      ]
+    },
+    "trademark_review_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "approved",
+        "conditional",
+        "rejected"
+      ]
+    },
+    "packaging_types": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "annotation_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "verified",
+        "rejected"
+      ]
+    },
+    "glass_mask_status": {
+      "enum": [
+        "pending",
+        "unknown",
+        "verified",
+        "rejected"
+      ]
+    },
+    "split": {
+      "enum": [
+        null,
+        "train",
+        "val",
+        "test"
+      ]
+    },
+    "source_group_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "storage_provider": {
+      "const": "google_drive"
+    },
+    "storage_relative_path": {
+      "type": "string",
+      "pattern": "^(01_ChatGPT_Synthetic/images/chatgpt_[0-9]{6}\\.png|02_Wikimedia_Commons/images/wikimedia_[0-9]{6}\\.jpg)$"
+    },
+    "local_cache_path": {
+      "type": "string",
+      "pattern": "^data_local/(synthetic_chatgpt/clean/images/chatgpt_[0-9]{6}\\.png|real_wikimedia/clean/images/wikimedia_[0-9]{6}\\.jpg)$"
+    },
+    "integrity_status": {
+      "enum": [
+        "verified",
+        "pending",
+        "missing",
+        "mismatch"
+      ]
+    },
+    "source_registry_version": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "collection_id": {
+            "const": "synthetic_chatgpt"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "image_id": {
+            "pattern": "^chatgpt_[0-9]{6}$"
+          },
+          "origin_type": {
+            "const": "synthetic"
+          },
+          "file_format": {
+            "const": "PNG"
+          },
+          "relative_path": {
+            "pattern": "^clean/images/chatgpt_[0-9]{6}\\.png$"
+          },
+          "storage_relative_path": {
+            "pattern": "^01_ChatGPT_Synthetic/images/chatgpt_[0-9]{6}\\.png$"
+          },
+          "local_cache_path": {
+            "pattern": "^data_local/synthetic_chatgpt/clean/images/chatgpt_[0-9]{6}\\.png$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "collection_id": {
+            "const": "real_wikimedia"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "image_id": {
+            "pattern": "^wikimedia_[0-9]{6}$"
+          },
+          "origin_type": {
+            "const": "real"
+          },
+          "file_format": {
+            "const": "JPEG"
+          },
+          "relative_path": {
+            "pattern": "^clean/images/wikimedia_[0-9]{6}\\.jpg$"
+          },
+          "storage_relative_path": {
+            "pattern": "^02_Wikimedia_Commons/images/wikimedia_[0-9]{6}\\.jpg$"
+          },
+          "local_cache_path": {
+            "pattern": "^data_local/real_wikimedia/clean/images/wikimedia_[0-9]{6}\\.jpg$"
+          },
+          "source_page_url": {
+            "type": "string",
+            "pattern": "^https://commons\\.wikimedia\\.org/wiki/File:"
+          }
+        }
+      }
+    }
+  ]
+}

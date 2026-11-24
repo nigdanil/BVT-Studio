@@ -51,7 +51,7 @@ git status --short
   --background --factory-startup --python-exit-code 1 \
   --python scripts/bvt_glass_effect_gallery_v02.py -- \
   --repo "D:/BVT-Studio" \
-  --photo "C:/Users/danil/Desktop/3D/Done/BVT_Freezer_Planogram_16x9_v11_eng.png" \
+  --photo "examples/freezer_planogram/images/chatgpt_000011.png" \
   --rects-file "D:/BVT-Studio/configs/bvt_freezer_glass_rects_1672x941.json" \
   --config "D:/BVT-Studio/configs/effects_gallery_v02.json" \
   --output "D:/BVT-Studio/qa_renders/effects_gallery_v02" \

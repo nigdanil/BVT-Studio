@@ -64,7 +64,7 @@ The validation folders are initially empty. Use independently sourced, reviewed 
 ```bash
 git clone https://github.com/nigdanil/BVT-Studio.git
 cd BVT-Studio
-python -m pip install numpy==2.2.6
+python -m pip install numpy==2.2.6 Pillow==12.3.0 openpyxl==3.1.5 jsonschema==4.26.0
 python scripts/validate_examples.py
 python -m unittest discover -s tests -v
 python scripts/build_addon.py
@@ -98,6 +98,9 @@ Public demo tag: `v0.4.0-alpha.5-demo.2`, source commit `383a4b0`. Subsequent cl
 - `bvt_studio/` — add-on source
 - `configs/` — canonical regression configurations
 - `examples/` — [self-contained example inputs](examples/README.md)
+- `datasets/` — [research dataset metadata and setup](datasets/README.md)
+- `docs/datasets/` — [collection provenance and storage policy](docs/datasets/README.md)
+- `data_local/` — local research inputs and outputs (ignored by Git)
 - `scripts/` — build, render and QA tools
 - `tests/` — source and numerical tests
 - `qa_renders/`, `dist/` — local generated outputs (ignored by Git)

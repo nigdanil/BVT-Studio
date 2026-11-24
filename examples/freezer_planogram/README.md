@@ -1,6 +1,6 @@
 # Freezer planogram reference (1672 x 941)
 
-- `images/`: exact synthetic source image from the calibrated gallery.
+- `images/`: `chatgpt_000011.png`, the exact synthetic source image from the calibrated gallery.
 - `configs/`: editable example copies of the canonical regression JSON files.
   The rectangles are approximate, not verified real-glass ground truth.
 - `masks/`: optional generated per-pane precision-mask PNG examples.
