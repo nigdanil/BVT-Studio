@@ -1,0 +1,165 @@
+{
+  "schema": "bvt_pilot_matrix_v1",
+  "description": "Pilot 001: photo-only control, coupled heavy-condensation preset, and four single-channel procedural interventions. Levels are generator parameters, not physical severity. Coverage fixed within each family; two glass seeds 42 and 43.",
+  "seed": 42,
+  "conditions": [
+    {
+      "id": "00_clean",
+      "preset": null,
+      "intensity": 0.0,
+      "coverage": 0.0
+    },
+    {
+      "id": "01_condensation_025",
+      "preset": "HEAVY_CONDENSATION",
+      "intensity": 0.25,
+      "coverage": 0.55
+    },
+    {
+      "id": "01_condensation_050",
+      "preset": "HEAVY_CONDENSATION",
+      "intensity": 0.5,
+      "coverage": 0.55
+    },
+    {
+      "id": "01_condensation_075",
+      "preset": "HEAVY_CONDENSATION",
+      "intensity": 0.75,
+      "coverage": 0.55
+    },
+    {
+      "id": "01_condensation_100",
+      "preset": "HEAVY_CONDENSATION",
+      "intensity": 1.0,
+      "coverage": 0.55
+    },
+    {
+      "id": "02_droplets_025",
+      "preset": "CUSTOM",
+      "intensity": 0.25,
+      "coverage": 0.55,
+      "channel": "bvt_glass_droplets",
+      "channel_max": 0.35
+    },
+    {
+      "id": "02_droplets_050",
+      "preset": "CUSTOM",
+      "intensity": 0.5,
+      "coverage": 0.55,
+      "channel": "bvt_glass_droplets",
+      "channel_max": 0.35
+    },
+    {
+      "id": "02_droplets_075",
+      "preset": "CUSTOM",
+      "intensity": 0.75,
+      "coverage": 0.55,
+      "channel": "bvt_glass_droplets",
+      "channel_max": 0.35
+    },
+    {
+      "id": "02_droplets_100",
+      "preset": "CUSTOM",
+      "intensity": 1.0,
+      "coverage": 0.55,
+      "channel": "bvt_glass_droplets",
+      "channel_max": 0.35
+    },
+    {
+      "id": "03_frost_025",
+      "preset": "CUSTOM",
+      "intensity": 0.25,
+      "coverage": 0.4,
+      "channel": "bvt_glass_frost",
+      "channel_max": 0.38
+    },
+    {
+      "id": "03_frost_050",
+      "preset": "CUSTOM",
+      "intensity": 0.5,
+      "coverage": 0.4,
+      "channel": "bvt_glass_frost",
+      "channel_max": 0.38
+    },
+    {
+      "id": "03_frost_075",
+      "preset": "CUSTOM",
+      "intensity": 0.75,
+      "coverage": 0.4,
+      "channel": "bvt_glass_frost",
+      "channel_max": 0.38
+    },
+    {
+      "id": "03_frost_100",
+      "preset": "CUSTOM",
+      "intensity": 1.0,
+      "coverage": 0.4,
+      "channel": "bvt_glass_frost",
+      "channel_max": 0.38
+    },
+    {
+      "id": "04_reflection_025",
+      "preset": "CUSTOM",
+      "intensity": 0.25,
+      "coverage": 0.12,
+      "channel": "bvt_glass_reflection",
+      "channel_max": 0.29
+    },
+    {
+      "id": "04_reflection_050",
+      "preset": "CUSTOM",
+      "intensity": 0.5,
+      "coverage": 0.12,
+      "channel": "bvt_glass_reflection",
+      "channel_max": 0.29
+    },
+    {
+      "id": "04_reflection_075",
+      "preset": "CUSTOM",
+      "intensity": 0.75,
+      "coverage": 0.12,
+      "channel": "bvt_glass_reflection",
+      "channel_max": 0.29
+    },
+    {
+      "id": "04_reflection_100",
+      "preset": "CUSTOM",
+      "intensity": 1.0,
+      "coverage": 0.12,
+      "channel": "bvt_glass_reflection",
+      "channel_max": 0.29
+    },
+    {
+      "id": "05_dirt_025",
+      "preset": "CUSTOM",
+      "intensity": 0.25,
+      "coverage": 0.58,
+      "channel": "bvt_glass_dirt",
+      "channel_max": 0.32
+    },
+    {
+      "id": "05_dirt_050",
+      "preset": "CUSTOM",
+      "intensity": 0.5,
+      "coverage": 0.58,
+      "channel": "bvt_glass_dirt",
+      "channel_max": 0.32
+    },
+    {
+      "id": "05_dirt_075",
+      "preset": "CUSTOM",
+      "intensity": 0.75,
+      "coverage": 0.58,
+      "channel": "bvt_glass_dirt",
+      "channel_max": 0.32
+    },
+    {
+      "id": "05_dirt_100",
+      "preset": "CUSTOM",
+      "intensity": 1.0,
+      "coverage": 0.58,
+      "channel": "bvt_glass_dirt",
+      "channel_max": 0.32
+    }
+  ]
+}
